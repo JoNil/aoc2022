@@ -1,3 +1,6 @@
+pub static INPUT: &str = include_str!("input/1.txt");
+pub static TEST_INPUT: &str = include_str!("input/1_test.txt");
+
 pub fn a(input: &str) -> i32 {
     input
         .split("\n\n")
@@ -35,19 +38,3 @@ fn test_b() {
     assert_eq!(b(TEST_INPUT), 45000);
     assert_eq!(b(INPUT), 206104);
 }
-
-pub static INPUT: &str = include_str!("input/1.txt");
-static TEST_INPUT: &str = "1000
-2000
-3000
-
-4000
-
-5000
-6000
-
-7000
-8000
-9000
-
-10000";

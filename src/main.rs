@@ -1,4 +1,4 @@
-mod day1;
+use aoc2022::*;
 
 fn main() {
     println!("{}", day1::a(day1::INPUT));
