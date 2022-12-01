@@ -1,1 +1,2 @@
-pub mod day1;
+pub mod days;
+pub use days::*;

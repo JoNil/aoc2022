@@ -1,5 +1,5 @@
-pub static INPUT: &str = include_str!("input/1.txt");
-pub static TEST_INPUT: &str = include_str!("input/1_test.txt");
+pub static INPUT: &str = include_str!("../input/1.txt");
+pub static TEST_INPUT: &str = include_str!("../input/1_test.txt");
 
 pub fn a(input: &str) -> i32 {
     input
