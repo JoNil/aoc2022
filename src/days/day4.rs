@@ -35,10 +35,7 @@ pub fn b(input: &str) -> i32 {
     input
         .lines()
         .map(parse)
-        .map(|(first, second)| {
-            (first.clone().any(|v| second.contains(&v))
-                || second.clone().any(|v| first.contains(&v))) as i32
-        })
+        .map(|(mut first, second)| first.any(|v| second.contains(&v)) as i32)
         .sum::<i32>()
 }
 
