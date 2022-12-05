@@ -1,5 +1,3 @@
-use std::panic;
-
 use parse_display::{Display, FromStr};
 
 pub static INPUT: &str = include_str!("../input/5.txt");
