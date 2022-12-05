@@ -77,11 +77,30 @@ fn test_a() {
 }
 
 pub fn b(input: &str) -> String {
-    String::new()
+    let (mut yard, commands) = parse(input);
+
+    for command in commands {
+        let mut things = Vec::new();
+
+        for _ in 0..command.count {
+            if let Some(thing) = yard.piles[command.from as usize - 1].pop() {
+                things.push(thing);
+            }
+        }
+
+        for thing in things.iter().rev() {
+            yard.piles[command.to as usize - 1].push(*thing);
+        }
+    }
+
+    yard.piles
+        .iter_mut()
+        .map(|p| p.pop().unwrap_or(' '))
+        .collect()
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), "".to_string());
-    assert_eq!(b(INPUT), "".to_string());
+    assert_eq!(b(TEST_INPUT), "MCD".to_string());
+    assert_eq!(b(INPUT), "BLSGJSDTS".to_string());
 }
