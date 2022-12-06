@@ -28,15 +28,21 @@ fn test_a() {
 }
 
 pub fn b(input: &str) -> i32 {
-    0
+    input
+        .as_bytes()
+        .windows(14)
+        .enumerate()
+        .find(|(_, w)| w.iter().collect::<HashSet<_>>().len() == 14)
+        .map(|(count, _)| count + 14)
+        .unwrap() as i32
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(a(TEST_INPUT_1), 5);
-    assert_eq!(a(TEST_INPUT_2), 6);
-    assert_eq!(a(TEST_INPUT_3), 10);
-    assert_eq!(a(TEST_INPUT_4), 11);
-    assert_eq!(a(TEST_INPUT_5), 7);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT_1), 23);
+    assert_eq!(b(TEST_INPUT_2), 23);
+    assert_eq!(b(TEST_INPUT_3), 29);
+    assert_eq!(b(TEST_INPUT_4), 26);
+    assert_eq!(b(TEST_INPUT_5), 19);
+    assert_eq!(b(INPUT), 3217);
 }
