@@ -106,11 +106,26 @@ fn test_a() {
 }
 
 pub fn b(input: &str) -> i32 {
-    0
+    let root = parse(input);
+
+    let space_left = 70_000_000 - root.size();
+
+    root.all_dirs()
+        .iter()
+        .filter_map(|e| {
+            let size = e.size();
+            if space_left + size >= 30_000_000 {
+                Some(size)
+            } else {
+                None
+            }
+        })
+        .min()
+        .unwrap()
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT), 24933642);
+    assert_eq!(b(INPUT), 5883165);
 }
