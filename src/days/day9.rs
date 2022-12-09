@@ -27,10 +27,8 @@ pub fn a(input: &str) -> i32 {
             .unwrap();
 
         for _ in 0..count {
-            if head * dir.abs() == tail * dir.abs() {
-                head += dir;
-            } else {
-                head += dir;
+            head += dir;
+            if (head.x - tail.x).abs() > 1 || (head.y - tail.y).abs() > 1 {
                 tail = head - dir;
             }
             tail_pos.insert(tail);
@@ -43,7 +41,7 @@ pub fn a(input: &str) -> i32 {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 13);
-    assert_eq!(a(INPUT), 0);
+    assert_eq!(a(INPUT), 6023);
 }
 
 pub fn b(input: &str) -> i32 {
