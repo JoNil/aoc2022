@@ -61,11 +61,12 @@ pub fn b(input: &str) -> i32 {
                 let head = rope[i - 1];
                 let tail = &mut rope[i];
 
-                if (head.x - tail.x).abs() > 1 {
-                    *tail = head - (head.x - tail.x).signum();
-                }
-                if (head.y - tail.y).abs() > 1 {
-                    *tail = head - (head.y - tail.y).signum();
+                if (head.x - tail.x).abs() > 1 && (head.y - tail.y).abs() > 1 {
+                    *tail = head - ivec2((head.x - tail.x).signum(), (head.y - tail.y).signum());
+                } else if (head.x - tail.x).abs() > 1 {
+                    *tail = head - ivec2((head.x - tail.x).signum(), 0);
+                } else if (head.y - tail.y).abs() > 1 {
+                    *tail = head - ivec2(0, (head.y - tail.y).signum());
                 }
             }
             tail_pos.insert(rope[9]);
@@ -79,5 +80,5 @@ pub fn b(input: &str) -> i32 {
 fn test_b() {
     assert_eq!(b(TEST_INPUT), 1);
     assert_eq!(b(TEST_INPUT_2), 36);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(INPUT), 2533);
 }
