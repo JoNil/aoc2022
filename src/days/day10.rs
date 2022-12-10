@@ -1,7 +1,9 @@
 use parse_display::{Display, FromStr};
+use std::io::Write;
 
 pub static INPUT: &str = include_str!("../input/10.txt");
 pub static TEST_INPUT: &str = include_str!("../input/10_test.txt");
+pub static TEST_RESULT: &str = include_str!("../input/10_test_result.txt");
 
 #[derive(Display, FromStr, PartialEq, Debug)]
 enum Instruction {
@@ -55,11 +57,8 @@ pub fn a(input: &str) -> i32 {
     let mut signal_strength = 0;
 
     for cycle in 1..=220 {
-        match cycle {
-            20 | 60 | 100 | 140 | 180 | 220 => {
-                signal_strength += cycle * cpu.x;
-            }
-            _ => {}
+        if let 20 | 60 | 100 | 140 | 180 | 220 = cycle {
+            signal_strength += cycle * cpu.x;
         }
 
         instruction_counter += cpu.execute(&instructions[instruction_counter as usize]);
@@ -74,12 +73,43 @@ fn test_a() {
     assert_eq!(a(INPUT), 14420);
 }
 
-pub fn b(input: &str) -> i32 {
-    0
+pub fn b(input: &str) -> String {
+    let instructions = input
+        .lines()
+        .map(|l| l.parse::<Instruction>().unwrap())
+        .collect::<Vec<_>>();
+    let mut instruction_counter = 0;
+
+    let mut cpu = Cpu::default();
+
+    let mut res = Vec::new();
+
+    for cycle in 0..=280 {
+        if let 40 | 80 | 120 | 160 | 200 | 240 = cycle {
+            writeln!(&mut res).unwrap();
+            println!("");
+        }
+
+        let crt = cycle % 40;
+
+        if cpu.x == crt || cpu.x - 1 == crt || cpu.x + 1 == crt {
+            write!(&mut res, "#").unwrap();
+            print!("#");
+        } else {
+            write!(&mut res, ".").unwrap();
+            print!(".");
+        }
+
+        if let Some(instruction) = instructions.get(instruction_counter as usize) {
+            instruction_counter += cpu.execute(instruction);
+        }
+    }
+
+    String::from_utf8(res).unwrap()
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT), TEST_RESULT);
+    assert_eq!(b(INPUT), String::new());
 }
