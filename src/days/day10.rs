@@ -4,6 +4,7 @@ use std::io::Write;
 pub static INPUT: &str = include_str!("../input/10.txt");
 pub static TEST_INPUT: &str = include_str!("../input/10_test.txt");
 pub static TEST_RESULT: &str = include_str!("../input/10_test_result.txt");
+pub static RESULT: &str = include_str!("../input/10_result.txt");
 
 #[derive(Display, FromStr, PartialEq, Debug)]
 enum Instruction {
@@ -84,20 +85,17 @@ pub fn b(input: &str) -> String {
 
     let mut res = Vec::new();
 
-    for cycle in 0..=280 {
-        if let 40 | 80 | 120 | 160 | 200 | 240 = cycle {
+    for cycle in 0..=239 {
+        if let 40 | 80 | 120 | 160 | 200 = cycle {
             writeln!(&mut res).unwrap();
-            println!("");
         }
 
         let crt = cycle % 40;
 
         if cpu.x == crt || cpu.x - 1 == crt || cpu.x + 1 == crt {
             write!(&mut res, "#").unwrap();
-            print!("#");
         } else {
             write!(&mut res, ".").unwrap();
-            print!(".");
         }
 
         if let Some(instruction) = instructions.get(instruction_counter as usize) {
@@ -111,5 +109,5 @@ pub fn b(input: &str) -> String {
 #[test]
 fn test_b() {
     assert_eq!(b(TEST_INPUT), TEST_RESULT);
-    assert_eq!(b(INPUT), String::new());
+    assert_eq!(b(INPUT), RESULT);
 }
