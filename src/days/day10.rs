@@ -98,9 +98,7 @@ pub fn b(input: &str) -> String {
             write!(&mut res, ".").unwrap();
         }
 
-        if let Some(instruction) = instructions.get(instruction_counter as usize) {
-            instruction_counter += cpu.execute(instruction);
-        }
+        instruction_counter += cpu.execute(&instructions[instruction_counter as usize]);
     }
 
     String::from_utf8(res).unwrap()
