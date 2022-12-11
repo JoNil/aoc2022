@@ -5,7 +5,7 @@ pub static INPUT: &str = include_str!("../input/11.txt");
 pub static TEST_INPUT: &str = include_str!("../input/11_test.txt");
 
 #[derive(PartialEq, Debug)]
-struct Items(Vec<i32>);
+struct Items(Vec<i64>);
 
 impl FromStr for Items {
     type Err = ();
@@ -23,13 +23,13 @@ impl FromStr for Items {
 #[derive(FromStr, PartialEq, Debug)]
 enum Input {
     #[display("{0}")]
-    Const(i32),
+    Const(i64),
     #[display("old")]
     Old,
 }
 
 impl Input {
-    fn get(&self, old: i32) -> i32 {
+    fn get(&self, old: i64) -> i64 {
         match self {
             Input::Const(c) => *c,
             Input::Old => old,
@@ -46,7 +46,7 @@ enum Operation {
 }
 
 impl Operation {
-    fn apply(&self, old: i32) -> i32 {
+    fn apply(&self, old: i64) -> i64 {
         match self {
             Operation::Mul(a, b) => a.get(old) * b.get(old),
             Operation::Add(a, b) => a.get(old) + b.get(old),
@@ -88,7 +88,7 @@ pub fn a(input: &str) -> i32 {
                 let item = monkeys[monkey_index].op.apply(item) / 3;
                 inspection_count[monkey_index] += 1;
 
-                if item % monkeys[monkey_index].divisor == 0 {
+                if item % monkeys[monkey_index].divisor as i64 == 0 {
                     let new_monkey_index = monkeys[monkey_index].on_true;
                     monkeys[new_monkey_index as usize].items.0.push(item);
                 } else {
@@ -115,6 +115,8 @@ pub fn b(input: &str) -> i64 {
         .map(|l| l.parse::<Monkey>().unwrap())
         .collect::<Vec<_>>();
 
+    let factor = monkeys.iter().map(|m| m.divisor as i64).product::<i64>();
+
     let mut inspection_count = vec![0; monkeys.len()];
 
     for _ in 0..10000 {
@@ -122,10 +124,10 @@ pub fn b(input: &str) -> i64 {
             let current_items = mem::replace(&mut monkeys[monkey_index].items, Items(Vec::new()));
 
             for item in current_items.0 {
-                let item = monkeys[monkey_index].op.apply(item);
+                let item = monkeys[monkey_index].op.apply(item) % factor;
                 inspection_count[monkey_index] += 1;
 
-                if item % monkeys[monkey_index].divisor == 0 {
+                if item % monkeys[monkey_index].divisor as i64 == 0 {
                     let new_monkey_index = monkeys[monkey_index].on_true;
                     monkeys[new_monkey_index as usize].items.0.push(item);
                 } else {
@@ -143,5 +145,5 @@ pub fn b(input: &str) -> i64 {
 #[test]
 fn test_b() {
     assert_eq!(b(TEST_INPUT), 2713310158);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(INPUT), 20151213744);
 }
