@@ -109,12 +109,39 @@ fn test_a() {
     assert_eq!(a(INPUT), 58794);
 }
 
-pub fn b(input: &str) -> i32 {
-    0
+pub fn b(input: &str) -> i64 {
+    let mut monkeys = input
+        .split("\n\n")
+        .map(|l| l.parse::<Monkey>().unwrap())
+        .collect::<Vec<_>>();
+
+    let mut inspection_count = vec![0; monkeys.len()];
+
+    for _ in 0..10000 {
+        for monkey_index in 0..monkeys.len() {
+            let current_items = mem::replace(&mut monkeys[monkey_index].items, Items(Vec::new()));
+
+            for item in current_items.0 {
+                let item = monkeys[monkey_index].op.apply(item);
+                inspection_count[monkey_index] += 1;
+
+                if item % monkeys[monkey_index].divisor == 0 {
+                    let new_monkey_index = monkeys[monkey_index].on_true;
+                    monkeys[new_monkey_index as usize].items.0.push(item);
+                } else {
+                    let new_monkey_index = monkeys[monkey_index].on_false;
+                    monkeys[new_monkey_index as usize].items.0.push(item);
+                }
+            }
+        }
+    }
+
+    inspection_count.sort();
+    inspection_count.iter().rev().take(2).product()
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
+    assert_eq!(b(TEST_INPUT), 2713310158);
     assert_eq!(b(INPUT), 0);
 }
