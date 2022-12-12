@@ -68,11 +68,43 @@ fn test_a() {
 }
 
 pub fn b(input: &str) -> i32 {
-    0
+    let (map, _, end) = parse(input);
+    let map = &map;
+
+    map.iter()
+        .filter(|(_, c)| **c == 'a' as i32)
+        .filter_map(|(start, _)| {
+            dijkstra(
+                start,
+                |&p| {
+                    let candidates = [
+                        p + ivec2(1, 0),
+                        p + ivec2(-1, 0),
+                        p + ivec2(0, 1),
+                        p + ivec2(0, -1),
+                    ];
+
+                    candidates.into_iter().filter_map(move |c| {
+                        let next_height = map.get(&c)?;
+                        let current_height = map.get(&p).unwrap();
+
+                        if *next_height <= *current_height + 1 {
+                            Some((c, 1))
+                        } else {
+                            None
+                        }
+                    })
+                },
+                |p| *p == end,
+            )
+            .map(|r| r.0.len() as i32 - 1)
+        })
+        .min()
+        .unwrap()
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT), 29);
+    assert_eq!(b(INPUT), 451);
 }
