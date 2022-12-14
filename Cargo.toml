@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 glam = "0.22"
+nom = "7"
 parse-display = "0.7"
 pathfinding = "4"
-nom = "7"
