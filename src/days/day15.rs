@@ -1,7 +1,5 @@
-use crate::utils::map::print_map;
 use glam::{ivec2, IVec2};
 use parse_display::FromStr;
-use std::collections::HashMap;
 
 pub static INPUT: &str = include_str!("../input/15.txt");
 pub static TEST_INPUT: &str = include_str!("../input/15_test.txt");

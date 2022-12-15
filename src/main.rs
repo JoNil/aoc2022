@@ -1,5 +1,5 @@
-use aoc2022::day14;
+use aoc2022::day15;
 
 fn main() {
-    println!("{}", day14::b(day14::INPUT));
+    println!("{}", day15::b(day15::INPUT, 4000000));
 }
