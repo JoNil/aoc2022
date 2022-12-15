@@ -64,12 +64,48 @@ fn test_a() {
     assert_eq!(a(INPUT, 2000000), 5394423);
 }
 
-pub fn b(input: &str) -> i32 {
+pub fn b(input: &str, max: i32) -> i64 {
+    let sensors = input
+        .lines()
+        .map(|l| l.parse::<Sensor>().unwrap())
+        .collect::<Vec<_>>();
+
+    for candidate_pos in sensors.iter().flat_map(|s| {
+        let dist = manhattan_distance(s.pos, s.closest_beacon) + 1;
+
+        (0..=dist)
+            .map(move |i| ivec2(s.pos.x + dist - i, s.pos.y + i))
+            .chain((0..=dist).map(move |i| ivec2(s.pos.x + dist - i, s.pos.y - i)))
+            .chain((0..=dist).map(move |i| ivec2(s.pos.x - dist - i, s.pos.y + i)))
+            .chain((0..=dist).map(move |i| ivec2(s.pos.x - dist - i, s.pos.y - i)))
+    }) {
+        if candidate_pos.x < 0
+            || candidate_pos.y < 0
+            || candidate_pos.x > max
+            || candidate_pos.y > max
+        {
+            continue;
+        }
+
+        if sensors
+            .iter()
+            .any(|s| s.closest_beacon == candidate_pos || s.pos == candidate_pos)
+        {
+            continue;
+        }
+
+        if sensors.iter().all(|s| {
+            manhattan_distance(candidate_pos, s.pos) > manhattan_distance(s.pos, s.closest_beacon)
+        }) {
+            return 4000000 * candidate_pos.x as i64 + candidate_pos.y as i64;
+        }
+    }
+
     0
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT, 20), 56000011);
+    assert_eq!(b(INPUT, 4000000), 11840879211051);
 }
