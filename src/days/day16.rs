@@ -71,8 +71,9 @@ pub fn a(input: &str) -> i32 {
             s.valve
                 .tunnels
                 .0
-                .iter()
-                .map(|t| valves.get(t).unwrap())
+                .clone()
+                .into_iter()
+                .map(|t| valves.get(&t).unwrap())
                 .flat_map(|v| {
                     let mut new_paths = vec![(
                         State {
@@ -100,7 +101,7 @@ pub fn a(input: &str) -> i32 {
                     new_paths
                 })
         },
-        |state| state.time == 30,
+        |s| s.time == 30,
     )
     .unwrap();
 
