@@ -1,5 +1,5 @@
 use parse_display::FromStr;
-use pathfinding::prelude::dijkstra;
+use pathfinding::prelude::{dijkstra, dijkstra_all};
 use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
@@ -36,13 +36,15 @@ struct Valve {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct State {
+struct State<'a> {
     time: i32,
-    valve: Valve,
+    valve: &'a Valve,
     opened: HashSet<String>,
+    rate: i32,
+    total: i32,
 }
 
-impl Hash for State {
+impl<'a> Hash for State<'a> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.time.hash(state);
         self.valve.hash(state);
@@ -61,56 +63,63 @@ pub fn a(input: &str) -> i32 {
 
     let start = State {
         time: 0,
-        valve: valves.get("AA").unwrap().clone(),
+        valve: valves.get("AA").unwrap(),
         opened: HashSet::new(),
+        rate: 0,
+        total: 0,
     };
+
+    let total_rate = valves.values().map(|v| v.rate).sum();
 
     let result = dijkstra(
         &start,
         |s| {
-            s.valve
-                .tunnels
-                .0
-                .clone()
-                .into_iter()
-                .map(|t| valves.get(&t).unwrap())
-                .flat_map(|v| {
-                    let mut new_paths = vec![(
-                        State {
-                            time: s.time + 1,
-                            valve: v.clone(),
-                            opened: s.opened.clone(),
-                        },
-                        0,
-                    )];
+            let mut candidates = Vec::new();
 
-                    if !s.opened.contains(&v.name) {
-                        let mut new_opened = s.opened.clone();
-                        new_opened.insert(v.name.clone());
+            if s.time == 30 {
+                return candidates.into_iter();
+            }
 
-                        new_paths.push((
-                            State {
-                                time: s.time + 2,
-                                valve: v.clone(),
-                                opened: new_opened,
-                            },
-                            -v.rate * (30 - (s.time + 2)),
-                        ));
-                    }
+            if !s.opened.contains(&s.valve.name) {
+                let mut new_opened = s.opened.clone();
+                new_opened.insert(s.valve.name.clone());
 
-                    new_paths
-                })
+                candidates.push((
+                    State {
+                        time: s.time + 1,
+                        valve: s.valve,
+                        opened: new_opened,
+                        rate: s.rate + s.valve.rate,
+                        total: s.total + s.rate,
+                    },
+                    -(s.rate + (30 - (s.time + 1)) * s.valve.rate),
+                ));
+            }
+
+            for v in s.valve.tunnels.0.iter().map(|t| valves.get(t).unwrap()) {
+                candidates.push((
+                    State {
+                        time: s.time + 1,
+                        valve: v,
+                        opened: s.opened.clone(),
+                        rate: s.rate,
+                        total: s.total + s.rate,
+                    },
+                    -s.rate,
+                ));
+            }
+
+            candidates.into_iter()
         },
-        |s| s.time == 30,
+        |s| s.time == 30 && s.rate == total_rate,
     )
     .unwrap();
 
-    for a in result.0 {
+    for a in &result.0 {
         println!("{:?}", a);
     }
 
-    println!("{}", result.1);
-    0
+    -result.1
 }
 
 #[test]
