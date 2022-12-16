@@ -65,43 +65,39 @@ pub fn a(input: &str) -> i32 {
         opened: HashSet::new(),
     };
 
-    let result = dijkstra_all(
-        &start,
-        |s| {
-            let mut candidates = Vec::new();
+    let result = dijkstra_all(&start, |s| {
+        let mut candidates = Vec::new();
 
-            if s.time == 30 {
-                return candidates.into_iter();
-            }
+        if s.time == 30 {
+            return candidates.into_iter();
+        }
 
-            if !s.opened.contains(&s.valve.name) {
-                let mut new_opened = s.opened.clone();
-                new_opened.insert(s.valve.name.clone());
+        if !s.opened.contains(&s.valve.name) {
+            let mut new_opened = s.opened.clone();
+            new_opened.insert(s.valve.name.clone());
 
-                candidates.push((
-                    State {
-                        time: s.time + 1,
-                        valve: s.valve,
-                        opened: new_opened,
-                    },
-                    -s.valve.rate * (30 - (s.time + 1)),
-                ));
-            }
+            candidates.push((
+                State {
+                    time: s.time + 1,
+                    valve: s.valve,
+                    opened: new_opened,
+                },
+                -s.valve.rate * (30 - (s.time + 1)),
+            ));
+        }
 
-            for v in s.valve.tunnels.0.iter().map(|t| valves.get(t).unwrap()) {
-                candidates.push((
-                    State {
-                        time: s.time + 1,
-                        valve: v,
-                        opened: s.opened.clone(),
-                    },
-                    0,
-                ));
-            }
-            candidates.into_iter()
-        },
-        //|s| s.time == 30,
-    );
+        for v in s.valve.tunnels.0.iter().map(|t| valves.get(t).unwrap()) {
+            candidates.push((
+                State {
+                    time: s.time + 1,
+                    valve: v,
+                    opened: s.opened.clone(),
+                },
+                0,
+            ));
+        }
+        candidates.into_iter()
+    });
 
     for a in &result {
         println!("{:?}", a.1 .1);
@@ -112,8 +108,7 @@ pub fn a(input: &str) -> i32 {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 1651);
-    panic!();
-    //assert_eq!(a(INPUT), 0);
+    assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
