@@ -40,8 +40,6 @@ struct State<'a> {
     time: i32,
     valve: &'a Valve,
     opened: HashSet<String>,
-    rate: i32,
-    total: i32,
 }
 
 impl<'a> Hash for State<'a> {
@@ -65,13 +63,9 @@ pub fn a(input: &str) -> i32 {
         time: 0,
         valve: valves.get("AA").unwrap(),
         opened: HashSet::new(),
-        rate: 0,
-        total: 0,
     };
 
-    let total_rate = valves.values().map(|v| v.rate).sum();
-
-    let result = dijkstra(
+    let result = dijkstra_all(
         &start,
         |s| {
             let mut candidates = Vec::new();
@@ -89,10 +83,8 @@ pub fn a(input: &str) -> i32 {
                         time: s.time + 1,
                         valve: s.valve,
                         opened: new_opened,
-                        rate: s.rate + s.valve.rate,
-                        total: s.total + s.rate,
                     },
-                    -(s.rate + (30 - (s.time + 1)) * s.valve.rate),
+                    -s.valve.rate * (30 - (s.time + 1)),
                 ));
             }
 
@@ -102,30 +94,26 @@ pub fn a(input: &str) -> i32 {
                         time: s.time + 1,
                         valve: v,
                         opened: s.opened.clone(),
-                        rate: s.rate,
-                        total: s.total + s.rate,
                     },
-                    -s.rate,
+                    0,
                 ));
             }
-
             candidates.into_iter()
         },
-        |s| s.time == 30 && s.rate == total_rate,
-    )
-    .unwrap();
+        //|s| s.time == 30,
+    );
 
-    for a in &result.0 {
-        println!("{:?}", a);
+    for a in &result {
+        println!("{:?}", a.1 .1);
     }
-
-    -result.1
+    -result.iter().map(|r| r.1 .1).min().unwrap()
 }
 
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 1651);
-    assert_eq!(a(INPUT), 0);
+    panic!();
+    //assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
