@@ -131,7 +131,6 @@ fn solve(
                 .map(move |candidate| {
                     let steps = *all_paths.get(&(s.location, candidate)).unwrap();
                     let candidate_rate = valves.get(candidate as usize).unwrap().rate;
-
                     (
                         State {
                             time: s.time + steps + 1,
@@ -178,7 +177,7 @@ pub fn a(input: &str) -> i32 {
 
 #[test]
 fn test_a() {
-    //assert_eq!(a(TEST_INPUT), 1651);
+    assert_eq!(a(TEST_INPUT), 1651);
     assert_eq!(a(INPUT), 2119);
 }
 
