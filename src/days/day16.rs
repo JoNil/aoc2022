@@ -70,28 +70,15 @@ struct State<'a> {
     total: i32,
 }
 
-pub fn a(input: &str) -> i32 {
-    let valves = input
-        .lines()
-        .map(|l| l.parse::<Valve>().unwrap())
-        .map(|v| (v.name.clone(), v))
-        .collect::<HashMap<_, _>>();
-
-    let all_paths = find_all_paths(&valves);
+fn solve(valves: &HashMap<String, Valve>, interesting_paths: Vec<&Valve>) -> i32 {
+    let all_paths = find_all_paths(valves);
 
     let total_rate = valves.values().map(|v| v.rate).sum::<i32>();
-
-    let mut remaining = valves
-        .values()
-        .filter(|v| v.name != "AA")
-        .filter(|v| v.rate != 0)
-        .collect::<Vec<_>>();
-    remaining.sort_by(|a, b| b.rate.cmp(&a.rate));
 
     let start = State {
         time: 0,
         location: valves.get("AA").unwrap(),
-        remaining,
+        remaining: interesting_paths,
         rate: 0,
         total: 0,
     };
@@ -145,6 +132,23 @@ pub fn a(input: &str) -> i32 {
     .unwrap();
 
     result.0.last().unwrap().total
+}
+
+pub fn a(input: &str) -> i32 {
+    let valves = input
+        .lines()
+        .map(|l| l.parse::<Valve>().unwrap())
+        .map(|v| (v.name.clone(), v))
+        .collect::<HashMap<_, _>>();
+
+    let mut remaining = valves
+        .values()
+        .filter(|v| v.name != "AA")
+        .filter(|v| v.rate != 0)
+        .collect::<Vec<_>>();
+    remaining.sort_by(|a, b| b.rate.cmp(&a.rate));
+
+    solve(&valves, remaining)
 }
 
 #[test]
