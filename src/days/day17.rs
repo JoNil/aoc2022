@@ -1,4 +1,3 @@
-use crate::utils::map::print_map;
 use glam::{ivec2, IVec2};
 use std::collections::HashMap;
 
@@ -40,20 +39,6 @@ fn insert_shape(map: &mut HashMap<IVec2, char>, shape_count: i32, pos: IVec2) {
     }
 }
 
-/*fn insert_box(map: &mut HashMap<IVec2, char>) {
-    map.insert(ivec2(-1, 1), '+');
-    map.insert(ivec2(7, 1), '+');
-
-    for x in 0..7 {
-        map.insert(ivec2(x, 1), '-');
-    }
-
-    for y in 0..9 {
-        map.insert(ivec2(-1, -y), '|');
-        map.insert(ivec2(7, -y), '|');
-    }
-}*/
-
 pub fn a(input: &str) -> i32 {
     let wind = input.chars().collect::<Vec<_>>();
 
@@ -65,13 +50,6 @@ pub fn a(input: &str) -> i32 {
         let mut shape_pos = ivec2(2, map.keys().map(|p| p.y).min().unwrap_or(1) - 4);
 
         loop {
-            /*{
-                let mut map = map.clone();
-                insert_shape(&mut map, shape_count, shape_pos);
-                insert_box(&mut map);
-                print_map(&map);
-            }*/
-
             let wind_pos = shape_pos
                 + match wind[wind_step % wind.len()] {
                     '>' => ivec2(1, 0),
