@@ -2,7 +2,7 @@
 
 use parse_display::FromStr;
 use pathfinding::prelude::dijkstra;
-use std::{collections::HashMap, hash::Hash, str::FromStr};
+use std::{collections::HashMap, fmt::Display, hash::Hash, iter, str::FromStr};
 
 pub static INPUT: &str = include_str!("../input/16.txt");
 pub static TEST_INPUT: &str = include_str!("../input/16_test.txt");
@@ -85,20 +85,30 @@ fn find_all_paths(valves: &[Valve]) -> HashMap<(i32, i32), i32> {
     all_paths
 }
 
-#[derive(Clone, Hash, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Hash, Debug, Eq, PartialEq)]
 struct State {
     time: i32,
     location: i32,
-    remaining: Vec<i32>,
+    remaining: u32,
     rate: i32,
     total: i32,
+}
+
+impl Display for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "time: {}, loc: {}, rem: 0b{:b}, rate: {}, tot: {}",
+            self.time, self.location, self.remaining, self.rate, self.total
+        )
+    }
 }
 
 fn solve(
     valves: &[Valve],
     all_paths: &HashMap<(i32, i32), i32>,
     start_index: i32,
-    interesting_paths: Vec<i32>,
+    interesting_paths: u32,
     max_t: i32,
 ) -> i32 {
     let total_rate = valves.iter().map(|v| v.rate).sum::<i32>();
@@ -113,46 +123,36 @@ fn solve(
 
     let result = dijkstra(
         &start,
-        |s| {
-            let mut candidates = Vec::new();
+        |&s| {
+            println!("{:?}", s);
 
-            if s.time == max_t {
-                return candidates.into_iter();
-            }
+            (0..(valves.len() as i32))
+                .filter(move |i| (s.remaining & (1 << i)) > 0)
+                .map(move |candidate| {
+                    let steps = *all_paths.get(&(s.location, candidate)).unwrap();
+                    let candidate_rate = valves.get(candidate as usize).unwrap().rate;
 
-            for candidate in &s.remaining {
-                let steps = *all_paths.get(&(s.location, *candidate)).unwrap();
-                let candidate_rate = valves.get(*candidate as usize).unwrap().rate;
-
-                candidates.push((
+                    (
+                        State {
+                            time: s.time + steps + 1,
+                            location: candidate,
+                            remaining: s.remaining & !(1 << candidate),
+                            rate: s.rate + candidate_rate,
+                            total: s.total + (steps + 1) * s.rate,
+                        },
+                        steps * (total_rate - s.rate) + total_rate - (s.rate + candidate_rate),
+                    )
+                })
+                .chain(iter::once((
                     State {
-                        time: s.time + steps + 1,
-                        location: *candidate,
-                        remaining: s
-                            .remaining
-                            .iter()
-                            .cloned()
-                            .filter(|r| *r != *candidate)
-                            .collect(),
-                        rate: s.rate + candidate_rate,
-                        total: s.total + (steps + 1) * s.rate,
+                        time: s.time + 1,
+                        location: s.location,
+                        remaining: s.remaining,
+                        rate: s.rate,
+                        total: s.total + s.rate,
                     },
-                    steps * (total_rate - s.rate) + total_rate - (s.rate + candidate_rate),
-                ));
-            }
-
-            candidates.push((
-                State {
-                    time: s.time + 1,
-                    location: s.location,
-                    remaining: s.remaining.clone(),
-                    rate: s.rate,
-                    total: s.total + s.rate,
-                },
-                total_rate - s.rate,
-            ));
-
-            candidates.into_iter()
+                    total_rate - s.rate,
+                )))
         },
         |s| s.time == max_t,
     )
@@ -170,15 +170,15 @@ pub fn a(input: &str) -> i32 {
         .enumerate()
         .filter(|(id, _)| *id as i32 != start_index)
         .filter(|(_, v)| v.rate != 0)
-        .map(|(id, _)| id as i32)
-        .collect::<Vec<_>>();
+        .map(|(id, _)| 1 << id as i32)
+        .sum::<u32>();
 
     solve(&valves, &all_paths, start_index, remaining, 30)
 }
 
 #[test]
 fn test_a() {
-    assert_eq!(a(TEST_INPUT), 1651);
+    //assert_eq!(a(TEST_INPUT), 1651);
     assert_eq!(a(INPUT), 2119);
 }
 
