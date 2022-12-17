@@ -3,6 +3,7 @@
 use itertools::Itertools;
 use parse_display::FromStr;
 use pathfinding::prelude::dijkstra;
+use rayon::prelude::*;
 use std::{collections::HashMap, iter, str::FromStr};
 
 pub static INPUT: &str = include_str!("../input/16.txt");
@@ -186,6 +187,8 @@ pub fn b(input: &str) -> i32 {
         .iter()
         .combinations(remaining.len() / 2)
         .enumerate()
+        .collect::<Vec<_>>()
+        .par_iter()
         .map(|(i, a)| {
             let b = remaining
                 .iter()
