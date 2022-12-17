@@ -77,10 +77,17 @@ pub fn a(input: &str) -> i32 {
 
     let total_rate = valves.values().map(|v| v.rate).sum::<i32>();
 
+    let mut remaining = valves
+        .values()
+        .filter(|v| v.name != "AA")
+        .filter(|v| v.rate != 0)
+        .collect::<Vec<_>>();
+    remaining.sort_by(|a, b| b.rate.cmp(&a.rate));
+
     let start = State {
         time: 0,
         location: valves.get("AA").unwrap(),
-        remaining: valves.values().filter(|v| v.name != "AA").collect(),
+        remaining,
         rate: 0,
         total: 0,
     };
@@ -93,8 +100,6 @@ pub fn a(input: &str) -> i32 {
             if s.time == 30 {
                 return candidates.into_iter();
             }
-
-            println!("{} {}", s.time, s.rate);
 
             for candidate in &s.remaining {
                 let steps = *all_paths
@@ -135,17 +140,13 @@ pub fn a(input: &str) -> i32 {
     )
     .unwrap();
 
-    for p in &result.0 {
-        println!("{p:?}");
-    }
-
     result.0.last().unwrap().total
 }
 
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 1651);
-    //assert_eq!(a(INPUT), 0);
+    assert_eq!(a(INPUT), 2119);
 }
 
 pub fn b(input: &str) -> i32 {
