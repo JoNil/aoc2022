@@ -32,10 +32,10 @@ struct Valve {
 }
 
 #[derive(Clone, Hash, Debug, Eq, PartialEq)]
-struct State {
+struct State<'a> {
     time: i32,
-    location: String,
-    remaining: Vec<String>,
+    location: &'a Valve,
+    remaining: Vec<&'a Valve>,
     rate: i32,
     total: i32,
 }
@@ -75,16 +75,12 @@ pub fn a(input: &str) -> i32 {
         all_paths
     };
 
-    let total_rate = valves.values().map(|v| v.rate).sum();
+    let total_rate = valves.values().map(|v| v.rate).sum::<i32>();
 
     let start = State {
         time: 0,
-        location: "AA".to_string(),
-        remaining: valves
-            .values()
-            .map(|v| v.name.clone())
-            .filter(|name| name != "AA")
-            .collect(),
+        location: valves.get("AA").unwrap(),
+        remaining: valves.values().filter(|v| v.name != "AA").collect(),
         rate: 0,
         total: 0,
     };
@@ -98,11 +94,12 @@ pub fn a(input: &str) -> i32 {
                 return candidates.into_iter();
             }
 
+            println!("{} {}", s.time, s.rate);
+
             for candidate in &s.remaining {
                 let steps = *all_paths
-                    .get(&(s.location.clone(), candidate.clone()))
+                    .get(&(s.location.name.clone(), candidate.name.clone()))
                     .unwrap();
-                let candidate_rate = valves.get(candidate).unwrap().rate;
 
                 candidates.push((
                     State {
@@ -114,17 +111,17 @@ pub fn a(input: &str) -> i32 {
                             .cloned()
                             .filter(|r| *r != *candidate)
                             .collect(),
-                        rate: s.rate + candidate_rate,
+                        rate: s.rate + candidate.rate,
                         total: s.total + (steps + 1) * s.rate,
                     },
-                    steps * (total_rate - s.rate) + total_rate - (s.rate + candidate_rate),
+                    steps * (total_rate - s.rate) + total_rate - (s.rate + candidate.rate),
                 ));
             }
 
             candidates.push((
                 State {
                     time: s.time + 1,
-                    location: s.location.clone(),
+                    location: s.location,
                     remaining: s.remaining.clone(),
                     rate: s.rate,
                     total: s.total + s.rate,
@@ -134,7 +131,7 @@ pub fn a(input: &str) -> i32 {
 
             candidates.into_iter()
         },
-        |s| s.time == 30 && s.rate == total_rate,
+        |s| s.time == 30,
     )
     .unwrap();
 
@@ -148,7 +145,7 @@ pub fn a(input: &str) -> i32 {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 1651);
-    assert_eq!(a(INPUT), 0);
+    //assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
