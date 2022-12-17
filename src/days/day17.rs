@@ -23,18 +23,15 @@ static I_SHAPE: &[IVec2] = &[ivec2(0, 0), ivec2(0, -1), ivec2(0, -2), ivec2(0, -
 static BOX_SHAPE: &[IVec2] = &[ivec2(0, 0), ivec2(1, 0), ivec2(0, -1), ivec2(1, -1)];
 static SHAPES: &[&[IVec2]] = &[MINUS_SHAPE, PLUS_SHAPE, ANGLE_SHAPE, I_SHAPE, BOX_SHAPE];
 
-fn shape_collides(map: &HashMap<IVec2, char>, shape_count: i64, pos: IVec2) -> bool {
-    SHAPES[shape_count as usize % SHAPES.len()]
+fn shape_collides(map: &HashMap<IVec2, char>, shape_count: usize, pos: IVec2) -> bool {
+    SHAPES[shape_count % SHAPES.len()]
         .iter()
         .map(|s| *s + pos)
         .any(|s| map.contains_key(&s) || s.y == 1 || s.x == -1 || s.x == 7)
 }
 
-fn insert_shape(map: &mut HashMap<IVec2, char>, shape_count: i64, pos: IVec2) {
-    for transformed_pos in SHAPES[shape_count as usize % SHAPES.len()]
-        .iter()
-        .map(|s| *s + pos)
-    {
+fn insert_shape(map: &mut HashMap<IVec2, char>, shape_count: usize, pos: IVec2) {
+    for transformed_pos in SHAPES[shape_count % SHAPES.len()].iter().map(|s| *s + pos) {
         map.insert(transformed_pos, '#');
     }
 }
@@ -89,11 +86,15 @@ pub fn b(input: &str) -> i64 {
 
     let mut wind_step = 0;
 
-    for shape_count in 0..1_000_000_000_000i64 {
-        if shape_count % 1000 == 0 {
-            println!("{shape_count}");
-        }
+    let mut last_height = 0;
 
+    let preamble_count = 15;
+    let repeat_count = wind.len() - SHAPES.len();
+
+    let mut preamble_height = 0;
+    let mut repeat_height = 0;
+
+    for shape_count in 0..(preamble_count + 2 * repeat_count) {
         let mut shape_pos = ivec2(2, map.keys().map(|p| p.y).min().unwrap_or(1) - 4);
 
         loop {
@@ -118,9 +119,29 @@ pub fn b(input: &str) -> i64 {
                 shape_pos = fall_pos
             }
         }
+
+        if shape_count == preamble_count - 1 {
+            let height = -map.keys().map(|p| p.y).min().unwrap();
+            preamble_height = height;
+            last_height = height;
+        }
+
+        if shape_count == (repeat_count + preamble_count - 1) {
+            let height = -map.keys().map(|p| p.y).min().unwrap();
+            repeat_height = height - last_height;
+            last_height = height;
+        }
+
+        if shape_count == (2 * repeat_count + preamble_count - 1) {
+            let height = -map.keys().map(|p| p.y).min().unwrap();
+            assert_eq!(height - last_height, repeat_height);
+            last_height = height;
+        }
     }
 
-    -map.keys().map(|p| p.y).min().unwrap() as i64 + 1
+    (((1000000000000 - preamble_count) / repeat_count * repeat_height as usize
+        + preamble_height as usize)
+        + 1) as i64
 }
 
 #[test]
