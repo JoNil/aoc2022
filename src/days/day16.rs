@@ -32,23 +32,9 @@ struct RawValve {
     tunnels: Tunnels,
 }
 
-#[derive(Debug, Eq)]
 struct Valve {
-    id: i32,
     rate: i32,
     tunnels: Vec<i32>,
-}
-
-impl Hash for Valve {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
-    }
-}
-
-impl PartialEq for Valve {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
 }
 
 fn parse_input(input: &str) -> (Vec<Valve>, i32) {
@@ -60,9 +46,7 @@ fn parse_input(input: &str) -> (Vec<Valve>, i32) {
     (
         raw_valves
             .iter()
-            .enumerate()
-            .map(|(id, rv)| Valve {
-                id: id as i32,
+            .map(|rv| Valve {
                 rate: rv.rate,
                 tunnels: rv
                     .tunnels
@@ -76,20 +60,11 @@ fn parse_input(input: &str) -> (Vec<Valve>, i32) {
     )
 }
 
-fn find_all_paths(
-    valves: &[Valve],
-    start_index: i32,
-    interesting_paths: &[i32],
-) -> HashMap<(i32, i32), i32> {
+fn find_all_paths(valves: &[Valve]) -> HashMap<(i32, i32), i32> {
     let mut all_paths = HashMap::new();
 
-    let all_interesting_valves = [start_index]
-        .into_iter()
-        .chain(interesting_paths.iter().copied())
-        .collect::<Vec<_>>();
-
-    for (i, v1) in all_interesting_valves.iter().copied().enumerate() {
-        for v2 in all_interesting_valves[i + 1..].iter().copied() {
+    for v1 in 0..(valves.len() as i32) {
+        for v2 in (v1 + 1)..(valves.len() as i32) {
             let path = dijkstra(
                 &v1,
                 |s| {
@@ -119,9 +94,13 @@ struct State {
     total: i32,
 }
 
-fn solve(valves: &[Valve], start_index: i32, interesting_paths: Vec<i32>, max_t: i32) -> i32 {
-    let all_paths = find_all_paths(valves, start_index, &interesting_paths);
-
+fn solve(
+    valves: &[Valve],
+    all_paths: &HashMap<(i32, i32), i32>,
+    start_index: i32,
+    interesting_paths: Vec<i32>,
+    max_t: i32,
+) -> i32 {
     let total_rate = valves.iter().map(|v| v.rate).sum::<i32>();
 
     let start = State {
@@ -184,15 +163,17 @@ fn solve(valves: &[Valve], start_index: i32, interesting_paths: Vec<i32>, max_t:
 
 pub fn a(input: &str) -> i32 {
     let (valves, start_index) = parse_input(input);
+    let all_paths = find_all_paths(&valves);
 
     let remaining = valves
         .iter()
-        .filter(|v| v.id != start_index)
-        .filter(|v| v.rate != 0)
-        .map(|c| c.id)
+        .enumerate()
+        .filter(|(id, _)| *id as i32 != start_index)
+        .filter(|(_, v)| v.rate != 0)
+        .map(|(id, _)| id as i32)
         .collect::<Vec<_>>();
 
-    solve(&valves, start_index, remaining, 30)
+    solve(&valves, &all_paths, start_index, remaining, 30)
 }
 
 #[test]
