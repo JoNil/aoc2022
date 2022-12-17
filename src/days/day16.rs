@@ -120,7 +120,6 @@ pub fn a(input: &str) -> i32 {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 1651);
-    assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
