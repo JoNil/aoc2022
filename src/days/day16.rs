@@ -2,12 +2,11 @@
 
 use parse_display::FromStr;
 use pathfinding::prelude::dijkstra;
-use std::{collections::HashMap, hash::Hash, str::FromStr};
+use std::{collections::HashMap, hash::Hash, str::FromStr, time::Instant};
 
 pub static INPUT: &str = include_str!("../input/16.txt");
 pub static TEST_INPUT: &str = include_str!("../input/16_test.txt");
 
-#[derive(Clone, PartialEq, Debug, Hash, Eq)]
 struct Tunnels(Vec<String>);
 
 impl FromStr for Tunnels {
@@ -25,37 +24,85 @@ impl FromStr for Tunnels {
     }
 }
 
-#[derive(Clone, FromStr, PartialEq, Debug, Hash, Eq)]
+#[derive(FromStr)]
 #[display("Valve {name} has flow rate={rate}; {tunnels}")]
-struct Valve {
+struct RawValve {
     name: String,
     rate: i32,
     tunnels: Tunnels,
 }
 
-fn find_all_paths(valves: &HashMap<String, Valve>) -> HashMap<(String, String), i32> {
+#[derive(Debug, Eq)]
+struct Valve {
+    id: i32,
+    rate: i32,
+    tunnels: Vec<i32>,
+}
+
+impl Hash for Valve {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
+impl PartialEq for Valve {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+fn parse_input(input: &str) -> (Vec<Valve>, i32) {
+    let raw_valves = input
+        .lines()
+        .map(|l| l.parse::<RawValve>().unwrap())
+        .collect::<Vec<_>>();
+
+    (
+        raw_valves
+            .iter()
+            .enumerate()
+            .map(|(id, rv)| Valve {
+                id: id as i32,
+                rate: rv.rate,
+                tunnels: rv
+                    .tunnels
+                    .0
+                    .iter()
+                    .map(|t| raw_valves.iter().position(|rw| *t == rw.name).unwrap() as i32)
+                    .collect(),
+            })
+            .collect(),
+        raw_valves.iter().position(|rv| rv.name == "AA").unwrap() as i32,
+    )
+}
+
+fn find_all_paths<'a>(
+    valves: &'a [Valve],
+    start_index: i32,
+    interesting_paths: &[&'a Valve],
+) -> HashMap<(&'a Valve, &'a Valve), i32> {
     let mut all_paths = HashMap::new();
 
-    let all_valves = valves.values().map(|v| v.name.clone()).collect::<Vec<_>>();
+    let all_interesting_valves = [valves.get(start_index as usize).unwrap()]
+        .iter()
+        .copied()
+        .chain(interesting_paths.iter().copied())
+        .collect::<Vec<_>>();
 
-    for (i, v1) in all_valves.iter().enumerate() {
-        for v2 in &all_valves[i + 1..] {
+    for (i, v1) in all_interesting_valves.iter().copied().enumerate() {
+        for v2 in all_interesting_valves[i + 1..].iter().copied() {
             let path = dijkstra(
-                v1,
-                |s| {
-                    valves
-                        .get(s)
-                        .unwrap()
-                        .tunnels
-                        .0
+                &v1,
+                |&s| {
+                    s.tunnels
                         .iter()
-                        .map(|c| (c.clone(), 1))
+                        .map(|t| (valves.get(*t as usize).unwrap(), 1))
                 },
-                |s| s == v2,
+                |&c| c == v2,
             )
             .unwrap();
-            all_paths.insert((v1.clone(), v2.clone()), path.1);
-            all_paths.insert((v2.clone(), v1.clone()), path.1);
+            all_paths.insert((v1, v2), path.1);
+            all_paths.insert((v2, v1), path.1);
         }
     }
     all_paths
@@ -70,14 +117,14 @@ struct State<'a> {
     total: i32,
 }
 
-fn solve(valves: &HashMap<String, Valve>, interesting_paths: Vec<&Valve>, max_t: i32) -> i32 {
-    let all_paths = find_all_paths(valves);
+fn solve(valves: &[Valve], start_index: i32, interesting_paths: Vec<&Valve>, max_t: i32) -> i32 {
+    let all_paths = find_all_paths(valves, start_index, &interesting_paths);
 
-    let total_rate = valves.values().map(|v| v.rate).sum::<i32>();
+    let total_rate = valves.iter().map(|v| v.rate).sum::<i32>();
 
     let start = State {
         time: 0,
-        location: valves.get("AA").unwrap(),
+        location: valves.get(start_index as usize).unwrap(),
         remaining: interesting_paths,
         rate: 0,
         total: 0,
@@ -93,9 +140,7 @@ fn solve(valves: &HashMap<String, Valve>, interesting_paths: Vec<&Valve>, max_t:
             }
 
             for candidate in &s.remaining {
-                let steps = *all_paths
-                    .get(&(s.location.name.clone(), candidate.name.clone()))
-                    .unwrap();
+                let steps = *all_paths.get(&(s.location, candidate)).unwrap();
 
                 candidates.push((
                     State {
@@ -135,19 +180,15 @@ fn solve(valves: &HashMap<String, Valve>, interesting_paths: Vec<&Valve>, max_t:
 }
 
 pub fn a(input: &str) -> i32 {
-    let valves = input
-        .lines()
-        .map(|l| l.parse::<Valve>().unwrap())
-        .map(|v| (v.name.clone(), v))
-        .collect::<HashMap<_, _>>();
+    let (valves, start_index) = parse_input(input);
 
     let remaining = valves
-        .values()
-        .filter(|v| v.name != "AA")
+        .iter()
+        .filter(|v| v.id != start_index)
         .filter(|v| v.rate != 0)
         .collect::<Vec<_>>();
 
-    solve(&valves, remaining, 30)
+    solve(&valves, start_index, remaining, 30)
 }
 
 #[test]
@@ -157,11 +198,7 @@ fn test_a() {
 }
 
 pub fn b(input: &str) -> i32 {
-    let valves = input
-        .lines()
-        .map(|l| l.parse::<Valve>().unwrap())
-        .map(|v| (v.name.clone(), v))
-        .collect::<HashMap<_, _>>();
+    let (valves, start_index) = parse_input(input);
 
     0
 }
