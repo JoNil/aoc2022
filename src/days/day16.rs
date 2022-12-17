@@ -89,7 +89,7 @@ fn find_all_paths(valves: &[Valve]) -> HashMap<(i32, i32), i32> {
 struct State {
     time: i32,
     location: i32,
-    remaining: u32,
+    remaining: u64,
     rate: i32,
     total: i32,
 }
@@ -98,7 +98,7 @@ impl Display for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "time: {}, loc: {}, rem: 0b{:b}, rate: {}, tot: {}",
+            "time: {}, loc: {}, rem: 0b{:064b}, rate: {}, tot: {}",
             self.time, self.location, self.remaining, self.rate, self.total
         )
     }
@@ -108,7 +108,7 @@ fn solve(
     valves: &[Valve],
     all_paths: &HashMap<(i32, i32), i32>,
     start_index: i32,
-    interesting_paths: u32,
+    interesting_paths: u64,
     max_t: i32,
 ) -> i32 {
     let total_rate = valves.iter().map(|v| v.rate).sum::<i32>();
@@ -124,7 +124,7 @@ fn solve(
     let result = dijkstra(
         &start,
         |&s| {
-            println!("{:?}", s);
+            //println!("{}", s);
 
             (0..(valves.len() as i32))
                 .filter(move |i| (s.remaining & (1 << i)) > 0)
@@ -171,7 +171,7 @@ pub fn a(input: &str) -> i32 {
         .filter(|(id, _)| *id as i32 != start_index)
         .filter(|(_, v)| v.rate != 0)
         .map(|(id, _)| 1 << id as i32)
-        .sum::<u32>();
+        .sum::<u64>();
 
     solve(&valves, &all_paths, start_index, remaining, 30)
 }
