@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 glam = "0.22"
+itertools = "0.10"
 nom = "7"
 parse-display = "0.7"
 pathfinding = "4"

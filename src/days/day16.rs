@@ -1,8 +1,9 @@
 #![allow(clippy::comparison_chain)]
 
+use itertools::Itertools;
 use parse_display::FromStr;
 use pathfinding::prelude::dijkstra;
-use std::{collections::HashMap, fmt::Display, hash::Hash, iter, str::FromStr};
+use std::{collections::HashMap, iter, str::FromStr};
 
 pub static INPUT: &str = include_str!("../input/16.txt");
 pub static TEST_INPUT: &str = include_str!("../input/16_test.txt");
@@ -89,19 +90,9 @@ fn find_all_paths(valves: &[Valve]) -> HashMap<(i32, i32), i32> {
 struct State {
     time: i32,
     location: i32,
-    remaining: u64,
     rate: i32,
     total: i32,
-}
-
-impl Display for State {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "time: {}, loc: {}, rem: 0b{:064b}, rate: {}, tot: {}",
-            self.time, self.location, self.remaining, self.rate, self.total
-        )
-    }
+    remaining: u64,
 }
 
 fn solve(
@@ -124,8 +115,6 @@ fn solve(
     let result = dijkstra(
         &start,
         |&s| {
-            //println!("{}", s);
-
             (0..(valves.len() as i32))
                 .filter(move |i| (s.remaining & (1 << i)) > 0)
                 .map(move |candidate| {
@@ -183,12 +172,51 @@ fn test_a() {
 
 pub fn b(input: &str) -> i32 {
     let (valves, start_index) = parse_input(input);
+    let all_paths = find_all_paths(&valves);
 
-    0
+    let remaining = valves
+        .iter()
+        .enumerate()
+        .filter(|(id, _)| *id as i32 != start_index)
+        .filter(|(_, v)| v.rate != 0)
+        .map(|(id, _)| id as i32)
+        .collect::<Vec<_>>();
+
+    remaining
+        .iter()
+        .combinations(remaining.len() / 2)
+        .enumerate()
+        .map(|(i, a)| {
+            let b = remaining
+                .iter()
+                .filter(|id| !a.contains(id))
+                .collect::<Vec<_>>();
+
+            let me = solve(
+                &valves,
+                &all_paths,
+                start_index,
+                a.iter().map(|a| 1 << *a).sum(),
+                26,
+            );
+            let elephant = solve(
+                &valves,
+                &all_paths,
+                start_index,
+                b.iter().map(|b| 1 << *b).sum(),
+                26,
+            );
+
+            println!("{} {:?} {:?} {} {}", i, a, b, me, elephant);
+
+            me + elephant
+        })
+        .max()
+        .unwrap()
 }
 
 #[test]
 fn test_b() {
     assert_eq!(b(TEST_INPUT), 1707);
-    //assert_eq!(b(INPUT), 0);
+    assert_eq!(b(INPUT), 2615);
 }

@@ -16,6 +16,7 @@ name = "aoc2022"
 version = "0.1.0"
 dependencies = [
  "glam",
+ "itertools",
  "nom",
  "parse-display",
  "pathfinding",
