@@ -79,7 +79,7 @@ fn test_a() {
     assert_eq!(a(INPUT), 3111);
 }
 
-pub fn b(input: &str) -> i64 {
+pub fn b(input: &str, preamble_count: usize, repeat_count: usize) -> i64 {
     let wind = input.chars().collect::<Vec<_>>();
 
     let mut map: HashMap<IVec2, char> = HashMap::new();
@@ -88,13 +88,13 @@ pub fn b(input: &str) -> i64 {
 
     let mut last_height = 0;
 
-    let preamble_count = 15;
-    let repeat_count = wind.len() - SHAPES.len();
+    let rest_count = (1000000000000 - preamble_count) % repeat_count;
 
     let mut preamble_height = 0;
     let mut repeat_height = 0;
+    let mut rest_height = 0;
 
-    for shape_count in 0..(preamble_count + 2 * repeat_count) {
+    for shape_count in 0..10000 {
         let mut shape_pos = ivec2(2, map.keys().map(|p| p.y).min().unwrap_or(1) - 4);
 
         loop {
@@ -120,10 +120,20 @@ pub fn b(input: &str) -> i64 {
             }
         }
 
+        /*if let Some(min_y) = map.keys().map(|p| p.y).min() {
+            println!("{}", -min_y - last_height);
+            last_height = -min_y;
+        }*/
+
         if shape_count == preamble_count - 1 {
             let height = -map.keys().map(|p| p.y).min().unwrap();
             preamble_height = height;
             last_height = height;
+        }
+
+        if shape_count == (rest_count + preamble_count - 1) {
+            let height = -map.keys().map(|p| p.y).min().unwrap();
+            rest_height = height - last_height;
         }
 
         if shape_count == (repeat_count + preamble_count - 1) {
@@ -140,12 +150,13 @@ pub fn b(input: &str) -> i64 {
     }
 
     (((1000000000000 - preamble_count) / repeat_count * repeat_height as usize
-        + preamble_height as usize)
+        + preamble_height as usize
+        + rest_height as usize)
         + 1) as i64
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 1514285714288);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT, 15, 35), 1514285714288);
+    assert_eq!(b(INPUT, 185, 1720), 1526744186042);
 }
