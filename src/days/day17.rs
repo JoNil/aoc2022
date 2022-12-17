@@ -94,7 +94,7 @@ pub fn b(input: &str, preamble_count: usize, repeat_count: usize) -> i64 {
     let mut repeat_height = 0;
     let mut rest_height = 0;
 
-    for shape_count in 0..10000 {
+    for shape_count in 0..(preamble_count + 2 * repeat_count) {
         let mut shape_pos = ivec2(2, map.keys().map(|p| p.y).min().unwrap_or(1) - 4);
 
         loop {
