@@ -70,7 +70,7 @@ struct State<'a> {
     total: i32,
 }
 
-fn solve(valves: &HashMap<String, Valve>, interesting_paths: Vec<&Valve>) -> i32 {
+fn solve(valves: &HashMap<String, Valve>, interesting_paths: Vec<&Valve>, max_t: i32) -> i32 {
     let all_paths = find_all_paths(valves);
 
     let total_rate = valves.values().map(|v| v.rate).sum::<i32>();
@@ -88,7 +88,7 @@ fn solve(valves: &HashMap<String, Valve>, interesting_paths: Vec<&Valve>) -> i32
         |s| {
             let mut candidates = Vec::new();
 
-            if s.time == 30 {
+            if s.time == max_t {
                 return candidates.into_iter();
             }
 
@@ -127,7 +127,7 @@ fn solve(valves: &HashMap<String, Valve>, interesting_paths: Vec<&Valve>) -> i32
 
             candidates.into_iter()
         },
-        |s| s.time == 30,
+        |s| s.time == max_t,
     )
     .unwrap();
 
@@ -141,14 +141,13 @@ pub fn a(input: &str) -> i32 {
         .map(|v| (v.name.clone(), v))
         .collect::<HashMap<_, _>>();
 
-    let mut remaining = valves
+    let remaining = valves
         .values()
         .filter(|v| v.name != "AA")
         .filter(|v| v.rate != 0)
         .collect::<Vec<_>>();
-    remaining.sort_by(|a, b| b.rate.cmp(&a.rate));
 
-    solve(&valves, remaining)
+    solve(&valves, remaining, 30)
 }
 
 #[test]
