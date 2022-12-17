@@ -104,7 +104,7 @@ pub fn a(input: &str) -> i32 {
                 candidates.push((
                     State {
                         time: s.time + steps + 1,
-                        location: candidate.clone(),
+                        location: candidate,
                         remaining: s
                             .remaining
                             .iter()
