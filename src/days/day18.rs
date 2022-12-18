@@ -45,11 +45,40 @@ fn test_a() {
 }
 
 pub fn b(input: &str) -> i32 {
-    0
+    let drop = parse(input);
+
+    drop.iter()
+        .flat_map(|p| {
+            [
+                ivec3(1, 0, 0),
+                ivec3(-1, 0, 0),
+                ivec3(0, 1, 0),
+                ivec3(0, -1, 0),
+                ivec3(0, 0, 1),
+                ivec3(0, 0, -1),
+            ]
+            .into_iter()
+            .map(|c| c + *p)
+        })
+        .filter(|p| {
+            ![
+                ivec3(1, 0, 0),
+                ivec3(-1, 0, 0),
+                ivec3(0, 1, 0),
+                ivec3(0, -1, 0),
+                ivec3(0, 0, 1),
+                ivec3(0, 0, -1),
+            ]
+            .into_iter()
+            .map(|c| c + *p)
+            .all(|p| drop.contains(&p))
+        })
+        .filter(|p| !drop.contains(p))
+        .count() as i32
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
+    assert_eq!(b(TEST_INPUT), 58);
     assert_eq!(b(INPUT), 0);
 }
