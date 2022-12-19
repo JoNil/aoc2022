@@ -18,20 +18,18 @@ struct Blueprint {
 }
 
 #[derive(Debug, Hash, Clone, PartialEq, Eq)]
-struct State<'a> {
-    time: i32,
+struct State {
+    time: u16,
 
-    ore: i32,
-    clay: i32,
-    obsidian: i32,
-    geodes: i32,
+    ore: u16,
+    clay: u16,
+    obsidian: u16,
+    geodes: u16,
 
-    ore_robot: i32,
-    clay_robot: i32,
-    obsidian_robot: i32,
-    geode_robots: i32,
-
-    blueprint: &'a Blueprint,
+    ore_robot: u16,
+    clay_robot: u16,
+    obsidian_robot: u16,
+    geode_robots: u16,
 }
 
 pub fn a(input: &str) -> i32 {
@@ -53,7 +51,6 @@ pub fn a(input: &str) -> i32 {
                 clay_robot: 0,
                 obsidian_robot: 0,
                 geode_robots: 0,
-                blueprint,
             };
 
             let res = dijkstra_all(&start, |s| {
@@ -62,51 +59,49 @@ pub fn a(input: &str) -> i32 {
                     return candidates;
                 }
 
-                if s.ore >= s.blueprint.geode_robot_ore
-                    && s.obsidian >= s.blueprint.geode_robot_obsidian
+                if s.ore >= blueprint.geode_robot_ore as u16
+                    && s.obsidian >= blueprint.geode_robot_obsidian as u16
                 {
                     candidates.push((
                         State {
                             time: s.time + 1,
-                            ore: s.ore + s.ore_robot - s.blueprint.geode_robot_ore,
+                            ore: s.ore + s.ore_robot - blueprint.geode_robot_ore as u16,
                             clay: s.clay + s.clay_robot,
                             obsidian: s.obsidian + s.obsidian_robot
-                                - s.blueprint.geode_robot_obsidian,
+                                - blueprint.geode_robot_obsidian as u16,
                             geodes: s.geodes + s.geode_robots,
                             ore_robot: s.ore_robot,
                             clay_robot: s.clay_robot,
                             obsidian_robot: s.obsidian_robot,
                             geode_robots: s.geode_robots + 1,
-                            blueprint,
                         },
                         1000 - s.geodes - s.geode_robots - 1,
                     ));
                 } else {
-                    if s.ore >= s.blueprint.obsidian_robot_ore
-                        && s.clay >= s.blueprint.obsidian_robot_clay
+                    if s.ore >= blueprint.obsidian_robot_ore as u16
+                        && s.clay >= blueprint.obsidian_robot_clay as u16
                     {
                         candidates.push((
                             State {
                                 time: s.time + 1,
-                                ore: s.ore + s.ore_robot - s.blueprint.obsidian_robot_ore,
-                                clay: s.clay + s.clay_robot - s.blueprint.obsidian_robot_clay,
+                                ore: s.ore + s.ore_robot - blueprint.obsidian_robot_ore as u16,
+                                clay: s.clay + s.clay_robot - blueprint.obsidian_robot_clay as u16,
                                 obsidian: s.obsidian + s.obsidian_robot,
                                 geodes: s.geodes + s.geode_robots,
                                 ore_robot: s.ore_robot,
                                 clay_robot: s.clay_robot,
                                 obsidian_robot: s.obsidian_robot + 1,
                                 geode_robots: s.geode_robots,
-                                blueprint,
                             },
-                            1000 - s.geodes - s.geode_robots,
+                            1,
                         ));
                     }
 
-                    if s.ore >= s.blueprint.clay_robot_ore {
+                    if s.ore >= blueprint.clay_robot_ore as u16 {
                         candidates.push((
                             State {
                                 time: s.time + 1,
-                                ore: s.ore + s.ore_robot - s.blueprint.clay_robot_ore,
+                                ore: s.ore + s.ore_robot - blueprint.clay_robot_ore as u16,
                                 clay: s.clay + s.clay_robot,
                                 obsidian: s.obsidian + s.obsidian_robot,
                                 geodes: s.geodes + s.geode_robots,
@@ -114,17 +109,16 @@ pub fn a(input: &str) -> i32 {
                                 clay_robot: s.clay_robot + 1,
                                 obsidian_robot: s.obsidian_robot,
                                 geode_robots: s.geode_robots,
-                                blueprint,
                             },
-                            1000 - s.geodes - s.geode_robots,
+                            1,
                         ));
                     }
 
-                    if s.ore >= s.blueprint.ore_robot_ore {
+                    if s.ore >= blueprint.ore_robot_ore as u16 {
                         candidates.push((
                             State {
                                 time: s.time + 1,
-                                ore: s.ore + s.ore_robot - s.blueprint.ore_robot_ore,
+                                ore: s.ore + s.ore_robot - blueprint.ore_robot_ore as u16,
                                 clay: s.clay + s.clay_robot,
                                 obsidian: s.obsidian + s.obsidian_robot,
                                 geodes: s.geodes + s.geode_robots,
@@ -132,9 +126,8 @@ pub fn a(input: &str) -> i32 {
                                 clay_robot: s.clay_robot,
                                 obsidian_robot: s.obsidian_robot,
                                 geode_robots: s.geode_robots,
-                                blueprint,
                             },
-                            1000 - s.geodes - s.geode_robots,
+                            1,
                         ));
                     }
 
@@ -149,9 +142,8 @@ pub fn a(input: &str) -> i32 {
                             clay_robot: s.clay_robot,
                             obsidian_robot: s.obsidian_robot,
                             geode_robots: s.geode_robots,
-                            blueprint,
                         },
-                        1000 - s.geodes - s.geode_robots,
+                        1,
                     ));
                 }
 
@@ -162,9 +154,9 @@ pub fn a(input: &str) -> i32 {
             .max()
             .unwrap();
 
-            blueprint.id * res
+            blueprint.id as u16 * res
         })
-        .sum::<i32>()
+        .sum::<u16>() as i32
 }
 
 #[test]
@@ -179,8 +171,10 @@ pub fn b(input: &str) -> i32 {
         .map(|line| line.parse::<Blueprint>().unwrap())
         .collect::<Vec<_>>();
 
+    let mut max_time = 0;
+
     blueprints
-        .par_iter()
+        .iter()
         .take(3)
         .map(|blueprint| {
             let start = State {
@@ -193,61 +187,63 @@ pub fn b(input: &str) -> i32 {
                 clay_robot: 0,
                 obsidian_robot: 0,
                 geode_robots: 0,
-                blueprint,
             };
 
             let res = dijkstra_all(&start, |s| {
                 let mut candidates = Vec::new();
 
+                if s.time > max_time {
+                    println!("{s:?}");
+                    max_time = s.time;
+                }
+
                 if s.time == 32 {
                     return candidates;
                 }
 
-                if s.ore >= s.blueprint.geode_robot_ore
-                    && s.obsidian >= s.blueprint.geode_robot_obsidian
+                if s.ore >= blueprint.geode_robot_ore as u16
+                    && s.obsidian >= blueprint.geode_robot_obsidian as u16
                 {
                     candidates.push((
                         State {
                             time: s.time + 1,
-                            ore: s.ore + s.ore_robot - s.blueprint.geode_robot_ore,
+                            ore: s.ore + s.ore_robot - blueprint.geode_robot_ore as u16,
                             clay: s.clay + s.clay_robot,
                             obsidian: s.obsidian + s.obsidian_robot
-                                - s.blueprint.geode_robot_obsidian,
+                                - blueprint.geode_robot_obsidian as u16,
                             geodes: s.geodes + s.geode_robots,
                             ore_robot: s.ore_robot,
                             clay_robot: s.clay_robot,
                             obsidian_robot: s.obsidian_robot,
                             geode_robots: s.geode_robots + 1,
-                            blueprint,
                         },
                         1000 - s.geodes - s.geode_robots - 1,
                     ));
                 } else {
-                    if s.ore >= s.blueprint.obsidian_robot_ore
-                        && s.clay >= s.blueprint.obsidian_robot_clay
+                    if s.ore >= blueprint.obsidian_robot_ore as u16
+                        && s.clay >= blueprint.obsidian_robot_clay as u16
                     {
                         candidates.push((
                             State {
                                 time: s.time + 1,
-                                ore: s.ore + s.ore_robot - s.blueprint.obsidian_robot_ore,
-                                clay: s.clay + s.clay_robot - s.blueprint.obsidian_robot_clay,
+                                ore: s.ore + s.ore_robot - blueprint.obsidian_robot_ore as u16,
+                                clay: s.clay + s.clay_robot - blueprint.obsidian_robot_clay as u16,
                                 obsidian: s.obsidian + s.obsidian_robot,
                                 geodes: s.geodes + s.geode_robots,
                                 ore_robot: s.ore_robot,
                                 clay_robot: s.clay_robot,
                                 obsidian_robot: s.obsidian_robot + 1,
                                 geode_robots: s.geode_robots,
-                                blueprint,
                             },
-                            1000 - s.geodes - s.geode_robots,
+                            1,
                         ));
                     }
 
-                    if s.ore >= s.blueprint.clay_robot_ore {
+                    if s.ore >= blueprint.clay_robot_ore as u16 {
                         candidates.push((
                             State {
                                 time: s.time + 1,
-                                ore: s.ore + s.ore_robot - s.blueprint.clay_robot_ore,
+                                ore: s.ore + s.ore_robot - blueprint.clay_robot_ore as u16,
                                 clay: s.clay + s.clay_robot,
                                 obsidian: s.obsidian + s.obsidian_robot,
                                 geodes: s.geodes + s.geode_robots,
@@ -255,17 +251,16 @@ pub fn b(input: &str) -> i32 {
                                 clay_robot: s.clay_robot + 1,
                                 obsidian_robot: s.obsidian_robot,
                                 geode_robots: s.geode_robots,
-                                blueprint,
                             },
-                            1000 - s.geodes - s.geode_robots,
+                            1,
                         ));
                     }
 
-                    if s.ore >= s.blueprint.ore_robot_ore {
+                    if s.ore >= blueprint.ore_robot_ore as u16 {
                         candidates.push((
                             State {
                                 time: s.time + 1,
-                                ore: s.ore + s.ore_robot - s.blueprint.ore_robot_ore,
+                                ore: s.ore + s.ore_robot - blueprint.ore_robot_ore as u16,
                                 clay: s.clay + s.clay_robot,
                                 obsidian: s.obsidian + s.obsidian_robot,
                                 geodes: s.geodes + s.geode_robots,
@@ -273,9 +268,8 @@ pub fn b(input: &str) -> i32 {
                                 clay_robot: s.clay_robot,
                                 obsidian_robot: s.obsidian_robot,
                                 geode_robots: s.geode_robots,
-                                blueprint,
                             },
-                            1000 - s.geodes - s.geode_robots,
+                            1,
                         ));
                     }
 
@@ -290,9 +284,8 @@ pub fn b(input: &str) -> i32 {
                             clay_robot: s.clay_robot,
                             obsidian_robot: s.obsidian_robot,
                             geode_robots: s.geode_robots,
-                            blueprint,
                         },
-                        1000 - s.geodes - s.geode_robots,
+                        1,
                     ));
                 }
 
@@ -306,9 +299,9 @@ pub fn b(input: &str) -> i32 {
             dbg!(blueprint.id);
             dbg!(res);
 
-            blueprint.id * res
+            res as i32
         })
-        .product()
+        .product::<i32>()
 }
 
 #[test]
