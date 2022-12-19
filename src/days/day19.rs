@@ -16,7 +16,7 @@ struct Blueprint {
     geode_robot_obsidian: i32,
 }
 
-#[derive(Hash, Clone, PartialEq, Eq)]
+#[derive(Debug Hash, Clone, PartialEq, Eq)]
 struct State<'a> {
     time: i32,
 
