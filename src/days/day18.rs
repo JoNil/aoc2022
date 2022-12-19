@@ -1,7 +1,6 @@
-use std::collections::HashSet;
-
 use glam::{ivec3, IVec3};
 use pathfinding::prelude::dijkstra;
+use std::collections::HashSet;
 
 pub static INPUT: &str = include_str!("../input/18.txt");
 pub static TEST_INPUT: &str = include_str!("../input/18_test.txt");
