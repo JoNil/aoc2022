@@ -20,11 +20,11 @@ struct Blueprint {
 #[derive(Debug, Hash, Clone, PartialEq, Eq)]
 struct State {
     time: u8,
-    geodes: u8,
 
     ore: u8,
     clay: u8,
     obsidian: u8,
+    geodes: u8,
 
     ore_robot: u8,
     clay_robot: u8,
@@ -45,13 +45,23 @@ fn solve(blueprint: &Blueprint, end_time: i32) -> i32 {
         geode_robots: 0,
     };
 
-    // TODO(JoNil): Maybe limit search space by holding array of max geode_robots per level and don't search if there has been a better one found
+    let mut max_geode_robots_at_time = vec![0; end_time as usize];
 
     dijkstra_all(&start, |s| {
         let mut candidates = Vec::new();
 
         if s.time as i32 == end_time {
             return candidates;
+        }
+
+        let max_geode_robots = max_geode_robots_at_time[s.time as usize];
+
+        if s.geode_robots + 1 < max_geode_robots {
+            return candidates;
+        }
+
+        if s.geode_robots > max_geode_robots {
+            max_geode_robots_at_time[s.time as usize] = s.geode_robots;
         }
 
         if s.ore >= blueprint.geode_robot_ore as u8
@@ -177,14 +187,7 @@ pub fn b(input: &str) -> i32 {
     blueprints
         .iter()
         .take(3)
-        .map(|blueprint| {
-            let res = solve(blueprint, 32);
-
-            dbg!(blueprint.id);
-            dbg!(res);
-
-            res as i32
-        })
+        .map(|blueprint| solve(blueprint, 32))
         .product::<i32>()
 }
 
