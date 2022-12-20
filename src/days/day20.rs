@@ -36,6 +36,7 @@ pub fn a(input: &str) -> i32 {
         }
 
         let src_index = index_to_pos[index % index_to_pos.len()];
+        println!("index {} -> {}", index % index_to_pos.len(), src_index);
         let value = file[src_index];
 
         if value == 0 {
@@ -43,8 +44,7 @@ pub fn a(input: &str) -> i32 {
         }
 
         let dst_index = {
-            let mut dst_index = (src_index as i32 + value) % file.len() as i32;
-            dbg!(dst_index);
+            let mut dst_index = (src_index as i32 + value) % (file.len() as i32 - 1);
             if dst_index <= 0 {
                 dst_index += file.len() as i32 - 1;
             }
@@ -78,7 +78,7 @@ pub fn a(input: &str) -> i32 {
                     if pos == dst_index {
                         index_to_pos[index] += src_index - dst_index;
                     } else {
-                        index_to_pos[index] += 1;
+                        index_to_pos[index] -= 1;
                     }
                 }
 
@@ -92,22 +92,18 @@ pub fn a(input: &str) -> i32 {
         match count_after_zero {
             1000 => {
                 sum += value;
-                println!("{}", value);
+                assert!(value == 4);
             }
             2000 => {
                 sum += value;
-                println!("{}", value);
+                assert!(value == -3);
             }
             3000 => {
                 sum += value;
-                println!("{}", value);
+                assert!(value == 2);
                 break;
             }
             _ => (),
-        }
-
-        if index == 10 {
-            panic!("end");
         }
 
         index += 1;
