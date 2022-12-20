@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 pub static INPUT: &str = include_str!("../input/20.txt");
 pub static TEST_INPUT: &str = include_str!("../input/20_test.txt");
 
@@ -7,7 +9,8 @@ pub fn a(input: &str) -> i32 {
         .map(|line| line.parse::<i32>().unwrap())
         .collect::<Vec<_>>();
 
-    let mut original_index = (0..file.len()).collect::<Vec<_>>();
+    let mut index_to_pos = (0..file.len()).collect::<Vec<_>>();
+    let mut pos_to_index = (0..file.len()).collect::<Vec<_>>();
 
     let mut found_zero = false;
     let mut index = 0;
@@ -16,24 +19,75 @@ pub fn a(input: &str) -> i32 {
     let mut sum = 0;
 
     loop {
-        let src_index = original_index[index % original_index.len()];
+        let test = match index {
+            0 => Some([1, 2, -3, 3, -2, 0, 4]),
+            1 => Some([2, 1, -3, 3, -2, 0, 4]),
+            2 => Some([1, -3, 2, 3, -2, 0, 4]),
+            3 => Some([1, 2, 3, -2, -3, 0, 4]),
+            4 => Some([1, 2, -2, -3, 0, 3, 4]),
+            5 => Some([1, 2, -3, 0, 3, 4, -2]),
+            6 => Some([1, 2, -3, 0, 3, 4, -2]),
+            7 => Some([1, 2, -3, 4, 0, 3, -2]),
+            _ => None,
+        };
+
+        if let Some(test) = test {
+            assert_eq!(file, test);
+        }
+
+        let src_index = index_to_pos[index % index_to_pos.len()];
         let value = file[src_index];
 
         if value == 0 {
             found_zero = true;
         }
 
-        let dst_index = ((src_index as i32 + value) % file.len() as i32).unsigned_abs() as usize;
+        let dst_index = {
+            let mut dst_index = (src_index as i32 + value) % file.len() as i32;
+            dbg!(dst_index);
+            if dst_index <= 0 {
+                dst_index += file.len() as i32 - 1;
+            }
+            dst_index as usize
+        };
 
-        println!("{:?}", &file);
+        println!("value {}, {} -> {}", value, src_index, dst_index,);
 
-        if src_index <= dst_index {
-            file[src_index..(dst_index + 1)].rotate_left(1);
-            original_index[src_index..(dst_index + 1)].rotate_left(1);
-        } else {
-            file[dst_index..(src_index + 1)].rotate_right(1);
-            original_index[dst_index..(src_index + 1)].rotate_right(1);
+        println!("{:?}, {:?}, {:?} =>", &file, &index_to_pos, &pos_to_index);
+
+        match src_index.cmp(&dst_index) {
+            Ordering::Less => {
+                file[src_index..=dst_index].rotate_left(1);
+
+                for pos in src_index..=dst_index {
+                    let index = pos_to_index[pos];
+                    if pos == src_index {
+                        index_to_pos[index] += dst_index - src_index;
+                    } else {
+                        index_to_pos[index] -= 1;
+                    }
+                }
+
+                pos_to_index[src_index..=dst_index].rotate_left(1);
+            }
+            Ordering::Greater => {
+                file[dst_index..=src_index].rotate_right(1);
+
+                for pos in dst_index..=src_index {
+                    let index = pos_to_index[pos];
+                    if pos == dst_index {
+                        index_to_pos[index] += src_index - dst_index;
+                    } else {
+                        index_to_pos[index] += 1;
+                    }
+                }
+
+                pos_to_index[dst_index..=src_index].rotate_right(1);
+            }
+            Ordering::Equal => {}
         }
+
+        println!("{:?}, {:?}, {:?} =>", &file, &index_to_pos, &pos_to_index);
 
         match count_after_zero {
             1000 => {
