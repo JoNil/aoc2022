@@ -32,7 +32,7 @@ struct State {
     geode_robots: u8,
 }
 
-fn solve(blueprint: &Blueprint, end_time: i32, mut max_time: Option<&mut i32>) -> i32 {
+fn solve(blueprint: &Blueprint, end_time: i32) -> i32 {
     let start = State {
         time: 0,
         ore: 0,
@@ -45,15 +45,10 @@ fn solve(blueprint: &Blueprint, end_time: i32, mut max_time: Option<&mut i32>) -
         geode_robots: 0,
     };
 
+    // TODO(JoNil): Maybe limit search space by holding array of max geode_robots per level and don't search if there has been a better one found
+
     dijkstra_all(&start, |s| {
         let mut candidates = Vec::new();
-
-        if let Some(max_time) = max_time.as_mut() {
-            if s.time as i32 > **max_time {
-                println!("{s:?}");
-                **max_time = s.time as i32;
-            }
-        }
 
         if s.time as i32 == end_time {
             return candidates;
@@ -163,7 +158,7 @@ pub fn a(input: &str) -> i32 {
 
     blueprints
         .par_iter()
-        .map(|blueprint| blueprint.id * solve(blueprint, 24, None))
+        .map(|blueprint| blueprint.id * solve(blueprint, 24))
         .sum::<i32>() as i32
 }
 
@@ -179,13 +174,11 @@ pub fn b(input: &str) -> i32 {
         .map(|line| line.parse::<Blueprint>().unwrap())
         .collect::<Vec<_>>();
 
-    let mut max_time = 0;
-
     blueprints
         .iter()
         .take(3)
         .map(|blueprint| {
-            let res = solve(blueprint, 32, Some(&mut max_time));
+            let res = solve(blueprint, 32);
 
             dbg!(blueprint.id);
             dbg!(res);
@@ -198,5 +191,5 @@ pub fn b(input: &str) -> i32 {
 #[test]
 fn test_b() {
     assert_eq!(b(TEST_INPUT), 56 * 62);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(INPUT), 29348);
 }
