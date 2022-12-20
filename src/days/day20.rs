@@ -89,6 +89,10 @@ pub fn a(input: &str) -> i32 {
 
         println!("{:?}, {:?}, {:?} =>", &file, &index_to_pos, &pos_to_index);
 
+        for i in 0..file.len() {
+            assert!(index_to_pos.iter().filter(|p| **p == i).count() == 1);
+        }
+
         match count_after_zero {
             1000 => {
                 sum += value;
