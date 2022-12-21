@@ -4,13 +4,12 @@ pub static INPUT: &str = include_str!("../input/20.txt");
 pub static TEST_INPUT: &str = include_str!("../input/20_test.txt");
 
 pub fn a(input: &str) -> i32 {
-    let mut file = input
+    let original_file = input
         .lines()
         .map(|line| line.parse::<i32>().unwrap())
         .collect::<Vec<_>>();
 
-    let mut index_to_pos = (0..file.len()).collect::<Vec<_>>();
-    let mut pos_to_index = (0..file.len()).collect::<Vec<_>>();
+    let mut scrambled_file = original_file.clone();
 
     let mut found_zero = false;
     let mut index = 0;
@@ -32,88 +31,97 @@ pub fn a(input: &str) -> i32 {
         };
 
         if let Some(test) = test {
-            assert_eq!(file, test);
+            assert_eq!(scrambled_file, test);
         }
 
-        let src_index = index_to_pos[index % index_to_pos.len()];
-        println!("index {} -> {}", index % index_to_pos.len(), src_index);
-        let value = file[src_index];
+        let value_to_move = original_file[index % original_file.len()];
+        let src_index = scrambled_file
+            .iter()
+            .enumerate()
+            .find(|(_, val)| value_to_move == **val)
+            .unwrap()
+            .0;
 
-        if value == 0 {
+        if value_to_move == 0 {
             found_zero = true;
         }
 
         let dst_index = {
-            let mut dst_index = (src_index as i32 + value) % (file.len() as i32 - 1);
+            let mut dst_index =
+                (src_index as i32 + value_to_move) % (original_file.len() as i32 - 1);
             if dst_index <= 0 {
-                dst_index += file.len() as i32 - 1;
+                dst_index += original_file.len() as i32 - 1;
             }
             dst_index as usize
         };
 
-        println!("value {}, {} -> {}", value, src_index, dst_index,);
+        //println!("value {}, {} -> {}", value_to_move, src_index, dst_index);
 
-        println!("{:?}, {:?}, {:?} =>", &file, &index_to_pos, &pos_to_index);
+        //print!("{:?} => ", &scrambled_file);
 
         match src_index.cmp(&dst_index) {
             Ordering::Less => {
-                file[src_index..=dst_index].rotate_left(1);
-
-                for pos in src_index..=dst_index {
-                    let index = pos_to_index[pos];
-                    if pos == src_index {
-                        index_to_pos[index] += dst_index - src_index;
-                    } else {
-                        index_to_pos[index] -= 1;
-                    }
-                }
-
-                pos_to_index[src_index..=dst_index].rotate_left(1);
+                scrambled_file[src_index..=dst_index].rotate_left(1);
             }
             Ordering::Greater => {
-                file[dst_index..=src_index].rotate_right(1);
-
-                for pos in dst_index..=src_index {
-                    let index = pos_to_index[pos];
-                    if pos == dst_index {
-                        index_to_pos[index] += src_index - dst_index;
-                    } else {
-                        index_to_pos[index] -= 1;
-                    }
-                }
-
-                pos_to_index[dst_index..=src_index].rotate_right(1);
+                scrambled_file[dst_index..=src_index].rotate_right(1);
             }
             Ordering::Equal => {}
         }
 
-        println!("{:?}, {:?}, {:?} =>", &file, &index_to_pos, &pos_to_index);
-
-        for i in 0..file.len() {
-            assert!(index_to_pos.iter().filter(|p| **p == i).count() == 1);
-        }
-
-        match count_after_zero {
-            1000 => {
-                sum += value;
-                assert!(value == 4);
-            }
-            2000 => {
-                sum += value;
-                assert!(value == -3);
-            }
-            3000 => {
-                sum += value;
-                assert!(value == 2);
-                break;
-            }
-            _ => (),
-        }
+        //println!("{:?}", &scrambled_file);
 
         index += 1;
 
         if found_zero {
             count_after_zero += 1;
+        }
+
+        match count_after_zero {
+            997 => {
+                println!("{}", value_to_move);
+            }
+            998 => {
+                println!("{}", value_to_move);
+            }
+            999 => {
+                println!("{}", value_to_move);
+            }
+            1000 => {
+                sum += value_to_move;
+                println!("1000 {}", value_to_move);
+                //assert!(value_to_move == 4);
+            }
+            1001 => {
+                println!("{}", value_to_move);
+            }
+            1002 => {
+                println!("{}", value_to_move);
+            }
+            1003 => {
+                println!("{}", value_to_move);
+            }
+            2000 => {
+                println!("2000 {}", value_to_move);
+                sum += value_to_move;
+                assert!(value_to_move == -3);
+            }
+            2001 => {
+                println!("2001 {}", value_to_move);
+            }
+            2002 => {
+                println!("2002 {}", value_to_move);
+            }
+            2003 => {
+                println!("2003 {}", value_to_move);
+            }
+            3000 => {
+                println!("3000 {}", value_to_move);
+                sum += value_to_move;
+                assert!(value_to_move == 2);
+                break;
+            }
+            _ => (),
         }
     }
 
