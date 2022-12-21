@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 
 pub static INPUT: &str = include_str!("../input/20.txt");
 pub static TEST_INPUT: &str = include_str!("../input/20_test.txt");
+pub static TORKEL_INPUT: &str = include_str!("../input/20_torkel.txt");
 
 fn modulo(a: i32, b: usize) -> usize {
     let mut res = a % b as i32;
@@ -29,7 +30,7 @@ pub fn a(input: &str) -> i32 {
     let len = scrambled_file.len();
 
     for index in 0..len {
-        let test = match index {
+        /*let test = match index {
             0 => Some([1, 2, -3, 3, -2, 0, 4]),
             1 => Some([2, 1, -3, 3, -2, 0, 4]),
             2 => Some([1, -3, 2, 3, -2, 0, 4]),
@@ -43,7 +44,7 @@ pub fn a(input: &str) -> i32 {
 
         if let Some(test) = test {
             assert_eq!(scrambled_file, test);
-        }
+        }*/
 
         let value_to_move = original_file[index % len];
         let src_index = scrambled_file
@@ -53,38 +54,48 @@ pub fn a(input: &str) -> i32 {
             .unwrap()
             .0;
 
-        print!("{value_to_move} {src_index}: {:?} => ", scrambled_file);
+        //print!("{value_to_move} {src_index}: {:?} => ", scrambled_file);
 
         match value_to_move.cmp(&0) {
             Ordering::Greater => {
+                //let mut rotations = 0;
+
                 for count in 0..value_to_move {
                     let from = modulo(src_index as i32 + count, len);
                     let next = modulo(src_index as i32 + count + 1, len);
                     scrambled_file.swap(from, next);
+
+                    //if next == len - 1 {
+                    //    rotations += 1;
+                    //}
                 }
+
+                //for _ in 0..rotations {
+                //    scrambled_file.rotate_left(1);
+                //}
             }
             Ordering::Less => {
                 let value_to_move = value_to_move.abs();
-                let mut needs_rotation = false;
+                //let mut rotations = 0;
 
                 for count in 0..value_to_move {
                     let from = modulo(src_index as i32 - count, len);
                     let next = modulo(src_index as i32 - count - 1, len);
                     scrambled_file.swap(from, next);
 
-                    if next == 0 {
-                        needs_rotation = true;
-                    }
+                    //if next == 0 {
+                    //rotations += 1;
+                    //}
                 }
 
-                if needs_rotation {
-                    scrambled_file.rotate_left(1);
-                }
+                //for _ in 0..rotations {
+                //    scrambled_file.rotate_left(1);
+                //}
             }
             Ordering::Equal => (),
         }
 
-        println!("{:?}", scrambled_file);
+        //println!("{:?}", scrambled_file)
     }
 
     let zero_index = scrambled_file
@@ -98,13 +109,22 @@ pub fn a(input: &str) -> i32 {
     let b = scrambled_file[(zero_index + 2000) % scrambled_file.len()];
     let c = scrambled_file[(zero_index + 3000) % scrambled_file.len()];
 
+    // 225, 1013, 8628
+    println!("{a}, {b}, {c}");
+
     a + b + c
 }
 
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 3);
-    //assert_eq!(a(INPUT), 0);
+    assert_eq!(a(TORKEL_INPUT), 9866);
+
+    // not -35..
+    // not 4387
+    // not 8579
+    // not -339
+    assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
