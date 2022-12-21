@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 pub static INPUT: &str = include_str!("../input/20.txt");
 pub static TEST_INPUT: &str = include_str!("../input/20_test.txt");
 pub static TORKEL_INPUT: &str = include_str!("../input/20_torkel.txt");
@@ -20,117 +18,48 @@ fn test_modulo() {
     assert_eq!(modulo(-2, 4), 2);
 }
 
-pub fn a(input: &str, assert_test: bool) -> i32 {
-    let original_file = input
+pub fn a(input: &str) -> i32 {
+    let mut i = 0;
+    let mut numbers = input
         .lines()
-        .map(|line| line.parse::<i32>().unwrap())
+        .map(|s| {
+            i += 1;
+            (s.parse::<i32>().unwrap(), i)
+        })
         .collect::<Vec<_>>();
 
-    let mut scrambled_file = original_file.clone();
-    let len = scrambled_file.len();
-
-    for index in 0..len {
-        if assert_test {
-            let test = match index {
-                0 => Some([1, 2, -3, 3, -2, 0, 4]),
-                1 => Some([2, 1, -3, 3, -2, 0, 4]),
-                2 => Some([1, -3, 2, 3, -2, 0, 4]),
-                3 => Some([1, 2, 3, -2, -3, 0, 4]),
-                4 => Some([1, 2, -2, -3, 0, 3, 4]),
-                5 => Some([1, 2, -3, 0, 3, 4, -2]),
-                6 => Some([1, 2, -3, 0, 3, 4, -2]),
-                7 => Some([1, 2, -3, 4, 0, 3, -2]),
-                _ => None,
-            };
-
-            if let Some(test) = test {
-                assert_eq!(scrambled_file, test);
-            }
-        }
-
-        let value_to_move = original_file[index];
-        let src_index = scrambled_file
+    for i in 1..=i {
+        let index = numbers
             .iter()
             .enumerate()
-            .find(|(_, val)| value_to_move == **val)
+            .find(|(_, (_, index))| i == *index)
             .unwrap()
             .0;
 
-        //print!("{value_to_move} {src_index}: {:?} => ", scrambled_file);
-
-        match value_to_move.cmp(&0) {
-            Ordering::Greater => {
-                let mut rotations = 0;
-
-                for count in 0..value_to_move {
-                    let from = modulo(src_index as i32 + count, len);
-                    let next = modulo(src_index as i32 + count + 1, len);
-                    scrambled_file.swap(from, next);
-
-                    if next == len - 1 {
-                        rotations += 1;
-                    }
-                }
-
-                for _ in 0..rotations {
-                    scrambled_file.rotate_right(1);
-                }
-            }
-            Ordering::Less => {
-                let value_to_move = value_to_move.abs();
-                let mut rotations = 0;
-
-                for count in 0..value_to_move {
-                    let from = modulo(src_index as i32 - count, len);
-                    let next = modulo(src_index as i32 - count - 1, len);
-                    scrambled_file.swap(from, next);
-
-                    if next == 0 {
-                        rotations += 1;
-                    }
-                }
-
-                for _ in 0..rotations {
-                    scrambled_file.rotate_left(1);
-                }
-            }
-            Ordering::Equal => (),
-        }
-
-        //println!("{:?}", scrambled_file)
+        let n = numbers.remove(index);
+        let pos = modulo(n.0 + index as i32, numbers.len());
+        numbers.insert(pos as usize, (n.0, i));
     }
 
-    if assert_test {
-        assert_eq!(scrambled_file, [1, 2, -3, 4, 0, 3, -2]);
-    }
-
-    let zero_index = scrambled_file
+    let zero_index = numbers
         .iter()
         .enumerate()
-        .find(|(_, v)| **v == 0)
+        .find(|(_, v)| v.0 == 0)
         .unwrap()
         .0;
 
-    let a = scrambled_file[(zero_index + 1000) % scrambled_file.len()];
-    let b = scrambled_file[(zero_index + 2000) % scrambled_file.len()];
-    let c = scrambled_file[(zero_index + 3000) % scrambled_file.len()];
-
-    // 225, 1013, 8628
-    println!("{a}, {b}, {c}");
+    let a = numbers[(zero_index + 1000) % numbers.len()].0;
+    let b = numbers[(zero_index + 2000) % numbers.len()].0;
+    let c = numbers[(zero_index + 3000) % numbers.len()].0;
 
     a + b + c
 }
 
 #[test]
 fn test_a() {
-    assert_eq!(a(TEST_INPUT, true), 3);
-    assert_eq!(a(TORKEL_INPUT, false), 9866);
-
-    // not -35..
-    // not 4387
-    // not 8579
-    // not -339
-    assert_eq!(a(INPUT, false), 0);
+    assert_eq!(a(TEST_INPUT), 3);
+    assert_eq!(a(TORKEL_INPUT), 9866);
+    assert_eq!(a(INPUT), 3700);
 }
 
 pub fn b(input: &str) -> i32 {
