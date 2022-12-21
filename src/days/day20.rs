@@ -48,7 +48,7 @@ pub fn a(input: &str, assert_test: bool) -> i32 {
             }
         }
 
-        let value_to_move = original_file[index % len];
+        let value_to_move = original_file[index];
         let src_index = scrambled_file
             .iter()
             .enumerate()
