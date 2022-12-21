@@ -104,5 +104,5 @@ pub fn b(input: &str) -> i64 {
 #[test]
 fn test_b() {
     assert_eq!(b(TEST_INPUT), 1623178306);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(INPUT), 10626948369382);
 }
