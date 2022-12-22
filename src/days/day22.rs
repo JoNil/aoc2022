@@ -173,7 +173,7 @@ pub fn a(input: &str) -> i32 {
                 for _ in 0..(*steps) {
                     let candidate_pos = pos + dir.dir();
 
-                    match map.get(&candidate_pos).unwrap() {
+                    match map.get(&candidate_pos).unwrap_or(&' ') {
                         '.' => {
                             pos = candidate_pos;
                         }
