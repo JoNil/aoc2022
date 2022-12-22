@@ -3,10 +3,9 @@
 use glam::{ivec2, IVec2};
 use std::collections::HashMap;
 
-use crate::utils::map::print_map;
-
 pub static INPUT: &str = include_str!("../input/22.txt");
 pub static TEST_INPUT: &str = include_str!("../input/22_test.txt");
+pub static TORKEL_INPUT: &str = include_str!("../input/22_torkel.txt");
 
 fn parse_map(
     input: &str,
@@ -100,6 +99,11 @@ fn parse_instructions(input: &str) -> Vec<Instruction> {
         }
     }
 
+    if !number.is_empty() {
+        res.push(Instruction::Fwd(number.parse().unwrap()));
+        number.clear();
+    }
+
     res
 }
 
@@ -153,9 +157,6 @@ pub fn a(input: &str) -> i32 {
     let (map_input, instructions_input) = input.split_once("\n\n").unwrap();
     let (map, x_wrapping, y_wrapping) = parse_map(map_input);
     let instructions = parse_instructions(instructions_input.trim());
-
-    print_map(&map);
-    println!("{x_wrapping:#?}");
 
     let x_start = map
         .keys()
@@ -246,8 +247,8 @@ pub fn a(input: &str) -> i32 {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 6032);
-    // Not 27424, too low
-    assert_eq!(a(INPUT), 0);
+    assert_eq!(a(TORKEL_INPUT), 149250);
+    assert_eq!(a(INPUT), 27436);
 }
 
 pub fn b(input: &str) -> i32 {
