@@ -48,7 +48,7 @@ impl Operation {
         }
     }
 
-    fn strip_layer(
+    fn solve_layer(
         &self,
         refs: &HashMap<&str, Operation>,
         current_equality: i128,
@@ -70,19 +70,13 @@ impl Operation {
                     refs.get(a.as_str()).unwrap().eval(refs)
                 };
 
-                if a_has_unknown {
-                    println!(" {b} => {other}");
-                } else {
-                    println!(" {a} => {other}");
-                }
-
                 Some(match op {
                     '+' => (current_equality - other, next_unknown.clone()),
                     '-' => {
                         if a_has_unknown {
                             (current_equality + other, next_unknown.clone())
                         } else {
-                            (current_equality - other, next_unknown.clone())
+                            (-(current_equality - other), next_unknown.clone())
                         }
                     }
                     '*' => (current_equality / other, next_unknown.clone()),
@@ -119,7 +113,7 @@ fn test_a() {
     assert_eq!(a(INPUT), 353837700405464);
 }
 
-pub fn b(input: &str) -> i32 {
+pub fn b(input: &str) -> i128 {
     let ops = input
         .lines()
         .map(|line| {
@@ -145,21 +139,16 @@ pub fn b(input: &str) -> i32 {
         (a.eval(&ops), b.clone())
     };
 
-    print!("{a} = {b:?}");
-
-    while let Some((new_a, new_b)) = b.strip_layer(&ops, a) {
+    while let Some((new_a, new_b)) = b.solve_layer(&ops, a) {
         a = new_a;
         b = new_b;
-        print!("{a} = {b:?}");
     }
 
-    a as i32
+    a
 }
 
 #[test]
 fn test_b() {
     assert_eq!(b(TEST_INPUT), 301);
-
-    // Not -1633403866
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(INPUT), 3678125408017);
 }
