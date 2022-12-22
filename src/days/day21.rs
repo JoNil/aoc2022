@@ -54,7 +54,7 @@ impl Operation {
         current_equality: i128,
     ) -> Option<(i128, Operation)> {
         match self {
-            Operation::Num(_) => panic!("Cant strip num"),
+            Operation::Num(_) => panic!("Not equation"),
             Operation::Op(op, a, b) => {
                 let a_has_unknown = refs.get(a.as_str()).unwrap().has_unknown(refs);
 
