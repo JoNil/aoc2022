@@ -103,6 +103,52 @@ fn parse_instructions(input: &str) -> Vec<Instruction> {
     res
 }
 
+#[derive(Copy, Clone)]
+enum Dir {
+    R,
+    L,
+    U,
+    D,
+}
+
+impl Dir {
+    fn rotate_cw(self) -> Dir {
+        match self {
+            Dir::R => Dir::D,
+            Dir::L => Dir::U,
+            Dir::U => Dir::R,
+            Dir::D => Dir::L,
+        }
+    }
+
+    fn rotate_ccw(self) -> Dir {
+        match self {
+            Dir::R => Dir::U,
+            Dir::L => Dir::D,
+            Dir::U => Dir::L,
+            Dir::D => Dir::R,
+        }
+    }
+
+    fn dir(self) -> IVec2 {
+        match self {
+            Dir::R => ivec2(1, 0),
+            Dir::L => ivec2(-1, 0),
+            Dir::U => ivec2(0, -1),
+            Dir::D => ivec2(0, 1),
+        }
+    }
+
+    fn score(self) -> i32 {
+        match self {
+            Dir::R => 0,
+            Dir::L => 2,
+            Dir::U => 3,
+            Dir::D => 1,
+        }
+    }
+}
+
 pub fn a(input: &str) -> i32 {
     let (map_input, instructions_input) = input.split_once("\n\n").unwrap();
     let (map, x_wrapping, y_wrapping) = parse_map(map_input);
@@ -112,7 +158,66 @@ pub fn a(input: &str) -> i32 {
     println!("{y_wrapping:#?}");
     println!("{instructions:#?}");
 
-    0
+    let x_start = map
+        .keys()
+        .filter_map(|p| if p.y == 1 { Some(p.x) } else { None })
+        .min()
+        .unwrap();
+
+    let mut pos = ivec2(x_start, 1);
+    let mut dir = Dir::R;
+
+    for instruction in &instructions {
+        match instruction {
+            Instruction::Fwd(steps) => {
+                for _ in 0..(*steps) {
+                    let candidate_pos = pos + dir.dir();
+
+                    match map.get(&candidate_pos).unwrap() {
+                        '.' => {
+                            pos = candidate_pos;
+                        }
+                        '#' => break,
+                        ' ' => match dir {
+                            Dir::R => {
+                                pos = ivec2(
+                                    y_wrapping.get(&candidate_pos.y).unwrap().0,
+                                    candidate_pos.y,
+                                );
+                            }
+                            Dir::L => {
+                                pos = ivec2(
+                                    y_wrapping.get(&candidate_pos.y).unwrap().1,
+                                    candidate_pos.y,
+                                );
+                            }
+                            Dir::U => {
+                                pos = ivec2(
+                                    candidate_pos.x,
+                                    x_wrapping.get(&candidate_pos.x).unwrap().1,
+                                );
+                            }
+                            Dir::D => {
+                                pos = ivec2(
+                                    candidate_pos.x,
+                                    x_wrapping.get(&candidate_pos.x).unwrap().0,
+                                );
+                            }
+                        },
+                        _ => (),
+                    }
+                }
+            }
+            Instruction::Cw => {
+                dir = dir.rotate_cw();
+            }
+            Instruction::Ccw => {
+                dir = dir.rotate_ccw();
+            }
+        }
+    }
+
+    1000 * pos.y + 4 * pos.x + dir.score()
 }
 
 #[test]
