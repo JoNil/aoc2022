@@ -38,7 +38,7 @@ pub fn a(input: &str) -> i32 {
 
         let n = numbers.remove(index);
         let pos = modulo(n.0 + index as i64, numbers.len());
-        numbers.insert(pos as usize, (n.0, i));
+        numbers.insert(pos, (n.0, i));
     }
 
     let zero_index = numbers
@@ -83,7 +83,7 @@ pub fn b(input: &str) -> i64 {
 
             let n = numbers.remove(index);
             let pos = modulo(n.0 + index as i64, numbers.len());
-            numbers.insert(pos as usize, (n.0, i));
+            numbers.insert(pos, (n.0, i));
         }
     }
 

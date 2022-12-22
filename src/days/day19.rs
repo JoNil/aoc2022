@@ -70,10 +70,9 @@ fn solve(blueprint: &Blueprint, end_time: i32) -> i32 {
             candidates.push((
                 State {
                     time: s.time + 1,
-                    ore: s.ore + s.ore_robot as u8 - blueprint.geode_robot_ore as u8,
-                    clay: s.clay + s.clay_robot as u8,
-                    obsidian: s.obsidian + s.obsidian_robot as u8
-                        - blueprint.geode_robot_obsidian as u8,
+                    ore: s.ore + s.ore_robot - blueprint.geode_robot_ore as u8,
+                    clay: s.clay + s.clay_robot,
+                    obsidian: s.obsidian + s.obsidian_robot - blueprint.geode_robot_obsidian as u8,
                     geodes: s.geodes + s.geode_robots,
                     ore_robot: s.ore_robot,
                     clay_robot: s.clay_robot,
@@ -89,9 +88,9 @@ fn solve(blueprint: &Blueprint, end_time: i32) -> i32 {
                 candidates.push((
                     State {
                         time: s.time + 1,
-                        ore: s.ore + s.ore_robot as u8 - blueprint.obsidian_robot_ore as u8,
-                        clay: s.clay + s.clay_robot as u8 - blueprint.obsidian_robot_clay as u8,
-                        obsidian: s.obsidian + s.obsidian_robot as u8,
+                        ore: s.ore + s.ore_robot - blueprint.obsidian_robot_ore as u8,
+                        clay: s.clay + s.clay_robot - blueprint.obsidian_robot_clay as u8,
+                        obsidian: s.obsidian + s.obsidian_robot,
                         geodes: s.geodes + s.geode_robots,
                         ore_robot: s.ore_robot,
                         clay_robot: s.clay_robot,
@@ -106,9 +105,9 @@ fn solve(blueprint: &Blueprint, end_time: i32) -> i32 {
                 candidates.push((
                     State {
                         time: s.time + 1,
-                        ore: s.ore + s.ore_robot as u8 - blueprint.clay_robot_ore as u8,
-                        clay: s.clay + s.clay_robot as u8,
-                        obsidian: s.obsidian + s.obsidian_robot as u8,
+                        ore: s.ore + s.ore_robot - blueprint.clay_robot_ore as u8,
+                        clay: s.clay + s.clay_robot,
+                        obsidian: s.obsidian + s.obsidian_robot,
                         geodes: s.geodes + s.geode_robots,
                         ore_robot: s.ore_robot,
                         clay_robot: s.clay_robot + 1,
@@ -123,9 +122,9 @@ fn solve(blueprint: &Blueprint, end_time: i32) -> i32 {
                 candidates.push((
                     State {
                         time: s.time + 1,
-                        ore: s.ore + s.ore_robot as u8 - blueprint.ore_robot_ore as u8,
-                        clay: s.clay + s.clay_robot as u8,
-                        obsidian: s.obsidian + s.obsidian_robot as u8,
+                        ore: s.ore + s.ore_robot - blueprint.ore_robot_ore as u8,
+                        clay: s.clay + s.clay_robot,
+                        obsidian: s.obsidian + s.obsidian_robot,
                         geodes: s.geodes + s.geode_robots,
                         ore_robot: s.ore_robot + 1,
                         clay_robot: s.clay_robot,
@@ -139,9 +138,9 @@ fn solve(blueprint: &Blueprint, end_time: i32) -> i32 {
             candidates.push((
                 State {
                     time: s.time + 1,
-                    ore: s.ore + s.ore_robot as u8,
-                    clay: s.clay + s.clay_robot as u8,
-                    obsidian: s.obsidian + s.obsidian_robot as u8,
+                    ore: s.ore + s.ore_robot,
+                    clay: s.clay + s.clay_robot,
+                    obsidian: s.obsidian + s.obsidian_robot,
                     geodes: s.geodes + s.geode_robots,
                     ore_robot: s.ore_robot,
                     clay_robot: s.clay_robot,
@@ -169,7 +168,7 @@ pub fn a(input: &str) -> i32 {
     blueprints
         .par_iter()
         .map(|blueprint| blueprint.id * solve(blueprint, 24))
-        .sum::<i32>() as i32
+        .sum::<i32>()
 }
 
 #[test]
