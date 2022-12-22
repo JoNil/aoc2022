@@ -187,6 +187,8 @@ pub fn a(input: &str) -> i32 {
 
                                 if *map.get(&new_candidate).unwrap() != '#' {
                                     pos = new_candidate;
+                                } else {
+                                    break;
                                 }
                             }
                             Dir::L => {
@@ -197,6 +199,8 @@ pub fn a(input: &str) -> i32 {
 
                                 if *map.get(&new_candidate).unwrap() != '#' {
                                     pos = new_candidate;
+                                } else {
+                                    break;
                                 }
                             }
                             Dir::U => {
@@ -207,6 +211,8 @@ pub fn a(input: &str) -> i32 {
 
                                 if *map.get(&new_candidate).unwrap() != '#' {
                                     pos = new_candidate;
+                                } else {
+                                    break;
                                 }
                             }
                             Dir::D => {
@@ -217,6 +223,8 @@ pub fn a(input: &str) -> i32 {
 
                                 if *map.get(&new_candidate).unwrap() != '#' {
                                     pos = new_candidate;
+                                } else {
+                                    break;
                                 }
                             }
                         },
