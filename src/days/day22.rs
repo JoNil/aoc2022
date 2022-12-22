@@ -72,12 +72,45 @@ fn parse_map(
     (map, x_wrapping, y_wrapping)
 }
 
+#[derive(Debug)]
+enum Instruction {
+    Fwd(i32),
+    Cw,
+    Ccw,
+}
+
+fn parse_instructions(input: &str) -> Vec<Instruction> {
+    let mut res = Vec::new();
+    let mut number = String::new();
+
+    for c in input.chars() {
+        if c.is_numeric() {
+            number.push(c);
+        } else {
+            if !number.is_empty() {
+                res.push(Instruction::Fwd(number.parse().unwrap()));
+                number.clear();
+            }
+
+            res.push(match c {
+                'R' => Instruction::Cw,
+                'L' => Instruction::Ccw,
+                _ => panic!("Bad char"),
+            });
+        }
+    }
+
+    res
+}
+
 pub fn a(input: &str) -> i32 {
-    let (map_input, instructions) = input.split_once("\n\n").unwrap();
+    let (map_input, instructions_input) = input.split_once("\n\n").unwrap();
     let (map, x_wrapping, y_wrapping) = parse_map(map_input);
+    let instructions = parse_instructions(instructions_input);
 
     print_map(&map);
     println!("{y_wrapping:#?}");
+    println!("{instructions:#?}");
 
     0
 }
