@@ -31,7 +31,7 @@ fn parse_map(
         let x_min = map.keys().map(|p| p.x).min().unwrap();
         let x_max = map.keys().map(|p| p.x).max().unwrap();
 
-        for x in x_min..x_max {
+        for x in x_min..=x_max {
             let y_min = map
                 .keys()
                 .filter_map(|p| if p.x == x { Some(p.y) } else { None })
@@ -53,7 +53,7 @@ fn parse_map(
         let y_min = map.keys().map(|p| p.y).min().unwrap();
         let y_max = map.keys().map(|p| p.y).max().unwrap();
 
-        for y in y_min..y_max {
+        for y in y_min..=y_max {
             let x_min = map
                 .keys()
                 .filter_map(|p| if p.y == y { Some(p.x) } else { None })
@@ -152,10 +152,10 @@ impl Dir {
 pub fn a(input: &str) -> i32 {
     let (map_input, instructions_input) = input.split_once("\n\n").unwrap();
     let (map, x_wrapping, y_wrapping) = parse_map(map_input);
-    let instructions = parse_instructions(instructions_input);
+    let instructions = parse_instructions(instructions_input.trim());
 
     print_map(&map);
-    println!("{y_wrapping:#?}");
+    println!("{x_wrapping:#?}");
     println!("{instructions:#?}");
 
     let x_start = map
@@ -180,28 +180,44 @@ pub fn a(input: &str) -> i32 {
                         '#' => break,
                         ' ' => match dir {
                             Dir::R => {
-                                pos = ivec2(
+                                let new_candidate = ivec2(
                                     y_wrapping.get(&candidate_pos.y).unwrap().0,
                                     candidate_pos.y,
                                 );
+
+                                if *map.get(&new_candidate).unwrap() != '#' {
+                                    pos = new_candidate;
+                                }
                             }
                             Dir::L => {
-                                pos = ivec2(
+                                let new_candidate = ivec2(
                                     y_wrapping.get(&candidate_pos.y).unwrap().1,
                                     candidate_pos.y,
                                 );
+
+                                if *map.get(&new_candidate).unwrap() != '#' {
+                                    pos = new_candidate;
+                                }
                             }
                             Dir::U => {
-                                pos = ivec2(
+                                let new_candidate = ivec2(
                                     candidate_pos.x,
                                     x_wrapping.get(&candidate_pos.x).unwrap().1,
                                 );
+
+                                if *map.get(&new_candidate).unwrap() != '#' {
+                                    pos = new_candidate;
+                                }
                             }
                             Dir::D => {
-                                pos = ivec2(
+                                let new_candidate = ivec2(
                                     candidate_pos.x,
                                     x_wrapping.get(&candidate_pos.x).unwrap().0,
                                 );
+
+                                if *map.get(&new_candidate).unwrap() != '#' {
+                                    pos = new_candidate;
+                                }
                             }
                         },
                         _ => (),
