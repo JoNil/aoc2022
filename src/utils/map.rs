@@ -17,7 +17,7 @@ pub fn print_map(map: &HashMap<IVec2, char>) {
 
     for y in min_y..=max_y {
         for x in min_x..=max_x {
-            print!("{}", map.get(&ivec2(x, y)).unwrap_or(&'.'));
+            print!("{}", map.get(&ivec2(x, y)).unwrap_or(&' '));
         }
         println!();
     }
