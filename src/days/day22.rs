@@ -156,7 +156,6 @@ pub fn a(input: &str) -> i32 {
 
     print_map(&map);
     println!("{x_wrapping:#?}");
-    println!("{instructions:#?}");
 
     let x_start = map
         .keys()
@@ -247,6 +246,7 @@ pub fn a(input: &str) -> i32 {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 6032);
+    // Not 27424, too low
     assert_eq!(a(INPUT), 0);
 }
 
