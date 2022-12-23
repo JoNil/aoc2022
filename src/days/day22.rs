@@ -251,12 +251,81 @@ fn test_a() {
     assert_eq!(a(INPUT), 27436);
 }
 
-pub fn b(input: &str) -> i32 {
-    0
+fn find_side(sides: &HashMap<i32, IVec2>, side: i32, pos: IVec2) -> i32 {
+    *sides
+        .iter()
+        .find(|s| pos.x >= s.1.x && pos.x < s.1.x + side && pos.y >= s.1.y && pos.y < s.1.y + side)
+        .unwrap()
+        .0
+}
+
+pub fn b(input: &str, side: i32) -> i32 {
+    let (map_input, instructions_input) = input.split_once("\n\n").unwrap();
+    let (map, _, _) = parse_map(map_input);
+    let instructions = parse_instructions(instructions_input.trim());
+
+    let x_start = map
+        .keys()
+        .filter_map(|p| if p.y == 1 { Some(p.x) } else { None })
+        .min()
+        .unwrap();
+
+    let sides = [
+        (1, ivec2(2 * side + 1, 1)),
+        (2, ivec2(1, side + 1)),
+        (3, ivec2(side + 1, side + 1)),
+        (4, ivec2(2 * side + 1, side + 1)),
+        (5, ivec2(2 * side + 1, 2 * side + 1)),
+        (6, ivec2(3 * side + 1, 2 * side + 1)),
+    ]
+    .into_iter()
+    .collect::<HashMap<i32, IVec2>>();
+
+    let mut pos = ivec2(x_start, 1);
+    let mut dir = Dir::R;
+
+    for instruction in &instructions {
+        match instruction {
+            Instruction::Fwd(steps) => {
+                for _ in 0..(*steps) {
+                    let candidate_pos = pos + dir.dir();
+
+                    match map.get(&candidate_pos).unwrap_or(&' ') {
+                        '.' => {
+                            pos = candidate_pos;
+                        }
+                        '#' => break,
+                        ' ' => {
+                            let s = find_side(&sides, side, pos);
+
+                            match dir {
+                                Dir::R => {
+                                    
+                                },
+                                Dir::L => todo!(),
+                                Dir::U => todo!(),
+                                Dir::D => todo!(),
+                            }
+                            panic!("Wrapping");
+                        }
+                        _ => (),
+                    }
+                }
+            }
+            Instruction::Cw => {
+                dir = dir.rotate_cw();
+            }
+            Instruction::Ccw => {
+                dir = dir.rotate_ccw();
+            }
+        }
+    }
+
+    1000 * pos.y + 4 * pos.x + dir.score()
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT, 4), 5031);
+    assert_eq!(b(INPUT, 50), 0);
 }
