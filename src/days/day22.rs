@@ -281,6 +281,8 @@ pub fn b(input: &str, side: i32) -> i32 {
     .into_iter()
     .collect::<HashMap<i32, IVec2>>();
 
+    let last = side - 1;
+
     let mut pos = ivec2(x_start, 1);
     let mut dir = Dir::R;
 
@@ -298,15 +300,28 @@ pub fn b(input: &str, side: i32) -> i32 {
                         ' ' => {
                             let s = find_side(&sides, side, pos);
 
-                            match dir {
-                                Dir::R => {
-                                    
-                                },
-                                Dir::L => todo!(),
-                                Dir::U => todo!(),
-                                Dir::D => todo!(),
+                            let (wraped_pos, wraped_dir) =  match (dir, s) {
+                                (Dir::R, 1) => {
+                                    let y_on_side = pos.y - sides.get(&1).unwrap().y;
+                                    let side_6 = sides.get(&6).unwrap();
+
+                                    (ivec2(side_6.x + last, side_6.y + last - y_on_side ),Dir::L)
+                                }
+                                (Dir::R, 4) => {
+                                    let y_on_side = pos.y - sides.get(&4).unwrap().y;
+                                    let side_6 = sides.get(&6).unwrap();
+
+                                    (ivec2(side_6.x + last - y_on_side, side_6.y), Dir::D)
+                                }
+                                (Dir::R, 6) => {
+                                    let y_on_side = pos.y - sides.get(&6).unwrap().y;
+                                    let side_1 = sides.get(&1).unwrap();
+
+                                    (ivec2(side_1.x + last, side_1.y + last - y_on_side),Dir::L)
+
+                                }
+                                _ => panic!("Error"),
                             }
-                            panic!("Wrapping");
                         }
                         _ => (),
                     }
