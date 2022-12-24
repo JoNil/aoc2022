@@ -409,6 +409,8 @@ pub fn b(input: &str, side: i32) -> i32 {
                         }
                         _ => (),
                     }
+
+                    println!("{pos:?}");
                     match dir {
                         Dir::R => {
                             debug_map.insert(pos, '>');
@@ -442,5 +444,5 @@ pub fn b(input: &str, side: i32) -> i32 {
 #[test]
 fn test_b() {
     assert_eq!(b(TEST_INPUT, 4), 5031);
-    //assert_eq!(b(INPUT, 50), 0);
+    assert_eq!(b(INPUT, 50), 0);
 }
