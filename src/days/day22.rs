@@ -374,9 +374,24 @@ pub fn b(input: &str, side: i32) -> i32 {
                                 }
 
                                 // Left
-                                (Dir::L, 1) => {}
-                                (Dir::L, 2) => {}
-                                (Dir::L, 5) => {}
+                                (Dir::L, 1) => {
+                                    let y_on_side = pos.y - sides.get(&1).unwrap().y;
+                                    let side_3 = sides.get(&3).unwrap();
+
+                                    (ivec2(side_3.x + y_on_side, side_3.y), Dir::D)
+                                }
+                                (Dir::L, 2) => {
+                                    let y_on_side = pos.y - sides.get(&2).unwrap().y;
+                                    let side_4 = sides.get(&4).unwrap();
+
+                                    (ivec2(side_4.x, side_4.y + y_on_side), Dir::L)
+                                }
+                                (Dir::L, 5) => {
+                                    let y_on_side = pos.y - sides.get(&5).unwrap().y;
+                                    let side_3 = sides.get(&3).unwrap();
+
+                                    (ivec2(side_3.x + last - y_on_side, side_3.y + last), Dir::U)
+                                }
 
                                 _ => panic!("Error"),
                             };
