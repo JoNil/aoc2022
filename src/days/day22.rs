@@ -300,12 +300,12 @@ pub fn b(input: &str, side: i32) -> i32 {
                         ' ' => {
                             let s = find_side(&sides, side, pos);
 
-                            let (wraped_pos, wraped_dir) =  match (dir, s) {
+                            let (wraped_pos, wraped_dir) = match (dir, s) {
                                 (Dir::R, 1) => {
                                     let y_on_side = pos.y - sides.get(&1).unwrap().y;
                                     let side_6 = sides.get(&6).unwrap();
 
-                                    (ivec2(side_6.x + last, side_6.y + last - y_on_side ),Dir::L)
+                                    (ivec2(side_6.x + last, side_6.y + last - y_on_side), Dir::L)
                                 }
                                 (Dir::R, 4) => {
                                     let y_on_side = pos.y - sides.get(&4).unwrap().y;
@@ -317,10 +317,49 @@ pub fn b(input: &str, side: i32) -> i32 {
                                     let y_on_side = pos.y - sides.get(&6).unwrap().y;
                                     let side_1 = sides.get(&1).unwrap();
 
-                                    (ivec2(side_1.x + last, side_1.y + last - y_on_side),Dir::L)
-
+                                    (ivec2(side_1.x + last, side_1.y + last - y_on_side), Dir::L)
                                 }
+
+                                (Dir::U, 2) => {
+                                    let x_on_side = pos.x - sides.get(&2).unwrap().x;
+                                    let side_1 = sides.get(&1).unwrap();
+
+                                    (ivec2(side_1.x + last - x_on_side, side_1.y), Dir::D)
+                                }
+                                (Dir::U, 3) => {
+                                    let x_on_side = pos.x - sides.get(&3).unwrap().x;
+                                    let side_1 = sides.get(&1).unwrap();
+
+                                    (ivec2(side_1.x, side_1.y + x_on_side), Dir::R)
+                                }
+                                (Dir::U, 1) => {
+                                    let x_on_side = pos.x - sides.get(&1).unwrap().x;
+                                    let side_5 = sides.get(&5).unwrap();
+
+                                    (ivec2(side_5.x + x_on_side, side_5.y + last), Dir::U)
+                                }
+                                (Dir::U, 6) => {
+                                    let x_on_side = pos.x - sides.get(&6).unwrap().x;
+                                    let side_4 = sides.get(&4).unwrap();
+
+                                    (ivec2(side_4.x + last, side_4.y + last - x_on_side), Dir::L)
+                                }
+
+                                (Dir::D, 2) => {}
+                                (Dir::D, 3) => {}
+                                (Dir::D, 5) => {}
+                                (Dir::D, 6) => {}
+
+                                (Dir::L, 1) => {}
+                                (Dir::L, 2) => {}
+                                (Dir::L, 5) => {}
+
                                 _ => panic!("Error"),
+                            };
+
+                            if *map.get(&wraped_pos).unwrap() != '#' {
+                                pos = wraped_pos;
+                                dir = wraped_dir;
                             }
                         }
                         _ => (),
