@@ -3,6 +3,8 @@
 use glam::{ivec2, IVec2};
 use std::collections::HashMap;
 
+use crate::utils::map::print_map;
+
 pub static INPUT: &str = include_str!("../input/22.txt");
 pub static TEST_INPUT: &str = include_str!("../input/22_test.txt");
 pub static TORKEL_INPUT: &str = include_str!("../input/22_torkel.txt");
@@ -281,6 +283,8 @@ pub fn b(input: &str, side: i32) -> i32 {
     .into_iter()
     .collect::<HashMap<i32, IVec2>>();
 
+    let mut debug_map = map.clone();
+
     let last = side - 1;
 
     let mut pos = ivec2(x_start, 1);
@@ -300,7 +304,7 @@ pub fn b(input: &str, side: i32) -> i32 {
                         ' ' => {
                             let s = find_side(&sides, side, pos);
 
-                            let (wraped_pos, wraped_dir) = match (dir, s) {
+                            let (wrapped_pos, wrapped_dir) = match (dir, s) {
                                 // Right
                                 (Dir::R, 1) => {
                                     let y_on_side = pos.y - sides.get(&1).unwrap().y;
@@ -336,9 +340,9 @@ pub fn b(input: &str, side: i32) -> i32 {
                                 }
                                 (Dir::U, 1) => {
                                     let x_on_side = pos.x - sides.get(&1).unwrap().x;
-                                    let side_5 = sides.get(&5).unwrap();
+                                    let side_2 = sides.get(&2).unwrap();
 
-                                    (ivec2(side_5.x + x_on_side, side_5.y + last), Dir::U)
+                                    (ivec2(side_2.x + last - x_on_side, side_2.y), Dir::D)
                                 }
                                 (Dir::U, 6) => {
                                     let x_on_side = pos.x - sides.get(&6).unwrap().x;
@@ -362,9 +366,9 @@ pub fn b(input: &str, side: i32) -> i32 {
                                 }
                                 (Dir::D, 5) => {
                                     let x_on_side = pos.x - sides.get(&5).unwrap().x;
-                                    let side_1 = sides.get(&1).unwrap();
+                                    let side_2 = sides.get(&2).unwrap();
 
-                                    (ivec2(side_1.x + x_on_side, side_1.y), Dir::D)
+                                    (ivec2(side_2.x + last - x_on_side, side_2.y + last), Dir::U)
                                 }
                                 (Dir::D, 6) => {
                                     let x_on_side = pos.x - sides.get(&6).unwrap().x;
@@ -396,12 +400,28 @@ pub fn b(input: &str, side: i32) -> i32 {
                                 _ => panic!("Error"),
                             };
 
-                            if *map.get(&wraped_pos).unwrap() != '#' {
-                                pos = wraped_pos;
-                                dir = wraped_dir;
+                            if *map.get(&wrapped_pos).unwrap() != '#' {
+                                pos = wrapped_pos;
+                                dir = wrapped_dir;
+                            } else {
+                                break;
                             }
                         }
                         _ => (),
+                    }
+                    match dir {
+                        Dir::R => {
+                            debug_map.insert(pos, '>');
+                        }
+                        Dir::L => {
+                            debug_map.insert(pos, '<');
+                        }
+                        Dir::U => {
+                            debug_map.insert(pos, '^');
+                        }
+                        Dir::D => {
+                            debug_map.insert(pos, 'v');
+                        }
                     }
                 }
             }
@@ -414,11 +434,13 @@ pub fn b(input: &str, side: i32) -> i32 {
         }
     }
 
+    print_map(&debug_map);
+
     1000 * pos.y + 4 * pos.x + dir.score()
 }
 
 #[test]
 fn test_b() {
     assert_eq!(b(TEST_INPUT, 4), 5031);
-    assert_eq!(b(INPUT, 50), 0);
+    //assert_eq!(b(INPUT, 50), 0);
 }
