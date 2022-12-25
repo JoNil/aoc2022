@@ -93,7 +93,8 @@ fn parse_map(input: &str) -> (HashMap<IVec2, char>, Vec<Blizzard>, BoundingBox) 
                         dir: ivec2(0, 1),
                     });
                 }
-                _ => panic!("Bad tile"),
+                '.' => (),
+                _ => panic!("Bad tile {c}"),
             }
         }
     }
@@ -109,26 +110,23 @@ struct State {
 
 pub fn a(input: &str) -> i32 {
     let (map, blizzards, bb) = parse_map(input);
+    let map = &map;
 
-    let start = ivec2(
-        (bb.min_x..=bb.max_x)
-            .find(|x| !map.contains_key(&ivec2(*x, bb.min_y)))
-            .unwrap(),
-        bb.min_y,
-    );
-    let end = ivec2(
-        (bb.min_x..=bb.max_x)
-            .find(|x| !map.contains_key(&ivec2(*x, bb.max_y)))
-            .unwrap(),
-        bb.max_y,
-    );
+    let start_x = (bb.min_x..=bb.max_x)
+        .find(|x| !map.contains_key(&ivec2(*x, bb.min_y)))
+        .unwrap();
+    let end_x = (bb.min_x..=bb.max_x)
+        .find(|x| !map.contains_key(&ivec2(*x, bb.max_y)))
+        .unwrap();
 
     let start = State {
-        pos: start,
+        pos: ivec2(start_x, bb.min_y),
         blizzards,
     };
 
-    let result = dijkstra(
+    let end = ivec2(end_x, bb.max_y);
+
+    dijkstra(
         &start,
         |s| {
             let next_blizzards = update_blizzards(&bb, &s.blizzards);
@@ -138,41 +136,41 @@ pub fn a(input: &str) -> i32 {
                 s.pos + ivec2(-1, 0),
                 s.pos + ivec2(0, 1),
                 s.pos + ivec2(0, -1),
+                s.pos,
             ];
 
-            candidates.into_iter().filter_map({
-                let next_blizzards = next_blizzards.clone();
-                move |c| {
-                    if map.contains_key(&c) {
+            candidates.into_iter().filter_map(move |c| {
+                if map.contains_key(&c) {
+                    return None;
+                }
+
+                for blizzard in &next_blizzards {
+                    if c == blizzard.pos {
                         return None;
                     }
-
-                    for blizzard in next_blizzards {
-                        if c == blizzard.pos {
-                            return None;
-                        }
-                    }
-
-                    Some((
-                        State {
-                            pos: c,
-                            blizzards: next_blizzards.clone(),
-                        },
-                        1,
-                    ))
                 }
+
+                Some((
+                    State {
+                        pos: c,
+                        blizzards: next_blizzards.clone(),
+                    },
+                    1,
+                ))
             })
         },
         |s| s.pos == end,
     )
-    .unwrap();
-    0
+    .unwrap()
+    .0
+    .len() as i32
+        - 1
 }
 
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 18);
-    assert_eq!(a(INPUT), 0);
+    //assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
