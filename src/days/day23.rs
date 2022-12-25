@@ -127,11 +127,55 @@ fn test_a() {
 }
 
 pub fn b(input: &str) -> i32 {
+    let mut map = parse_map(input);
+
+    for round in 0.. {
+        let mut proposed_moves = Vec::new();
+        let mut proposed_moves_count = HashMap::<IVec2, i32>::new();
+
+        for elf in map.keys() {
+            if all_direction()
+                .iter()
+                .all(|d| !map.contains_key(&(*elf + *d)))
+            {
+                continue;
+            }
+
+            for rule_index in 0..4 {
+                let rule_index = (rule_index + round) % 4;
+
+                let rule = rules()[rule_index];
+
+                if rule.1.iter().all(|d| !map.contains_key(&(*elf + *d))) {
+                    let proposed_pos = *elf + rule.0;
+                    proposed_moves.push((*elf, proposed_pos));
+                    *proposed_moves_count.entry(proposed_pos).or_default() += 1;
+
+                    break;
+                }
+            }
+        }
+
+        let mut move_count = 0;
+
+        for (old_pos, new_pos) in proposed_moves {
+            if *proposed_moves_count.get(&new_pos).unwrap() == 1 {
+                map.remove(&old_pos);
+                map.insert(new_pos, '#');
+                move_count += 1;
+            }
+        }
+
+        if move_count == 0 {
+            return round as i32 + 1;
+        }
+    }
+
     0
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT), 20);
+    assert_eq!(b(INPUT), 1012);
 }
