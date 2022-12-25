@@ -1,5 +1,5 @@
-use crate::utils::map::print_map;
 use glam::{ivec2, IVec2};
+use pathfinding::prelude::dijkstra;
 use std::collections::HashMap;
 
 pub static INPUT: &str = include_str!("../input/24.txt");
@@ -12,6 +12,7 @@ struct BoundingBox {
     max_y: i32,
 }
 
+#[derive(Clone, Eq, PartialEq, Hash)]
 struct Blizzard {
     pos: IVec2,
     dir: IVec2,
@@ -100,15 +101,77 @@ fn parse_map(input: &str) -> (HashMap<IVec2, char>, Vec<Blizzard>, BoundingBox) 
     (map, blizzards, bounding_box)
 }
 
+#[derive(Clone, Eq, PartialEq, Hash)]
+struct State {
+    pos: IVec2,
+    blizzards: Vec<Blizzard>,
+}
+
 pub fn a(input: &str) -> i32 {
-    let map = parse_map(input);
+    let (map, blizzards, bb) = parse_map(input);
+
+    let start = ivec2(
+        (bb.min_x..=bb.max_x)
+            .find(|x| !map.contains_key(&ivec2(*x, bb.min_y)))
+            .unwrap(),
+        bb.min_y,
+    );
+    let end = ivec2(
+        (bb.min_x..=bb.max_x)
+            .find(|x| !map.contains_key(&ivec2(*x, bb.max_y)))
+            .unwrap(),
+        bb.max_y,
+    );
+
+    let start = State {
+        pos: start,
+        blizzards,
+    };
+
+    let result = dijkstra(
+        &start,
+        |s| {
+            let next_blizzards = update_blizzards(&bb, &s.blizzards);
+
+            let candidates = [
+                s.pos + ivec2(1, 0),
+                s.pos + ivec2(-1, 0),
+                s.pos + ivec2(0, 1),
+                s.pos + ivec2(0, -1),
+            ];
+
+            candidates.into_iter().filter_map({
+                let next_blizzards = next_blizzards.clone();
+                move |c| {
+                    if map.contains_key(&c) {
+                        return None;
+                    }
+
+                    for blizzard in next_blizzards {
+                        if c == blizzard.pos {
+                            return None;
+                        }
+                    }
+
+                    Some((
+                        State {
+                            pos: c,
+                            blizzards: next_blizzards.clone(),
+                        },
+                        1,
+                    ))
+                }
+            })
+        },
+        |s| s.pos == end,
+    )
+    .unwrap();
     0
 }
 
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 18);
-    assert_eq!(a(TEST_INPUT_2), 18);
     assert_eq!(a(INPUT), 0);
 }
 
