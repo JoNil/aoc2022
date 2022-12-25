@@ -170,6 +170,7 @@ pub fn a(input: &str) -> i32 {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 18);
+    // Not 153
     assert_eq!(a(INPUT), 0);
 }
 
