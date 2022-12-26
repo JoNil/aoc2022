@@ -1,5 +1,5 @@
 use glam::{ivec2, IVec2};
-use pathfinding::prelude::dijkstra;
+use pathfinding::prelude::astar;
 use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
@@ -175,7 +175,7 @@ pub fn a(input: &str) -> i32 {
     let start = ivec2(start_x, bb.min_y);
     let end = ivec2(end_x, bb.max_y);
 
-    let res = dijkstra(
+    let res = astar(
         &State {
             pos: start,
             step: 0,
@@ -211,7 +211,7 @@ pub fn a(input: &str) -> i32 {
 
             candidates.into_iter()
         },
-        //|s| (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs(),
+        |s| (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs(),
         |s| s.pos == end,
     )
     .unwrap();
