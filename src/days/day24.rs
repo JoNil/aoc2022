@@ -226,11 +226,200 @@ fn test_a() {
 }
 
 pub fn b(input: &str) -> i32 {
-    0
+    let (map, blizzards, bb) = parse_map(input);
+    let map = &map;
+
+    let x_len = bb.max_x - bb.min_x - 1;
+    let y_len = bb.max_y - bb.min_y - 1;
+
+    let (x_blizzards, y_blizzards) = {
+        let mut x_blizzards = Vec::new();
+        let mut y_blizzards = Vec::new();
+
+        {
+            let mut state = blizzards
+                .iter()
+                .copied()
+                .filter(|b| b.dir.y == 0)
+                .collect::<Vec<_>>();
+
+            let initial_state = state.clone();
+
+            for _ in 0..x_len {
+                x_blizzards.push(state.iter().map(|b| b.pos).collect::<HashSet<_>>());
+                state = update_blizzards(&bb, &state);
+            }
+
+            assert_eq!(state, initial_state);
+        }
+
+        {
+            let mut state = blizzards
+                .iter()
+                .copied()
+                .filter(|b| b.dir.x == 0)
+                .collect::<Vec<_>>();
+
+            let initial_state = state.clone();
+
+            for _ in 0..y_len {
+                y_blizzards.push(state.iter().map(|b| b.pos).collect::<HashSet<_>>());
+                state = update_blizzards(&bb, &state);
+            }
+
+            assert_eq!(state, initial_state);
+        }
+
+        (x_blizzards, y_blizzards)
+    };
+
+    let start_x = (bb.min_x..=bb.max_x)
+        .find(|x| !map.contains_key(&ivec2(*x, bb.min_y)))
+        .unwrap();
+    let end_x = (bb.min_x..=bb.max_x)
+        .find(|x| !map.contains_key(&ivec2(*x, bb.max_y)))
+        .unwrap();
+
+    let start = ivec2(start_x, bb.min_y);
+    let end = ivec2(end_x, bb.max_y);
+
+    let steps_there = astar(
+        &State {
+            pos: start,
+            step: 0,
+        },
+        |s| {
+            let mut candidates = Vec::new();
+
+            let step = s.step + 1;
+
+            for c in [
+                s.pos + ivec2(1, 0),
+                s.pos + ivec2(-1, 0),
+                s.pos + ivec2(0, 1),
+                s.pos + ivec2(0, -1),
+                s.pos,
+            ] {
+                if (c.x >= bb.max_x || c.x <= bb.min_x || c.y >= bb.max_y || c.y <= bb.min_y)
+                    && (c != end && c != start)
+                {
+                    continue;
+                }
+
+                if x_blizzards[step as usize % x_blizzards.len()].contains(&c) {
+                    continue;
+                }
+
+                if y_blizzards[step as usize % y_blizzards.len()].contains(&c) {
+                    continue;
+                }
+
+                candidates.push((State { pos: c, step }, 1));
+            }
+
+            candidates.into_iter()
+        },
+        |s| (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs(),
+        |s| s.pos == end,
+    )
+    .unwrap()
+    .0
+    .len() as i32
+        - 1;
+
+    let steps_back = astar(
+        &State {
+            pos: end,
+            step: steps_there,
+        },
+        |s| {
+            let mut candidates = Vec::new();
+
+            let step = s.step + 1;
+
+            for c in [
+                s.pos + ivec2(1, 0),
+                s.pos + ivec2(-1, 0),
+                s.pos + ivec2(0, 1),
+                s.pos + ivec2(0, -1),
+                s.pos,
+            ] {
+                if (c.x >= bb.max_x || c.x <= bb.min_x || c.y >= bb.max_y || c.y <= bb.min_y)
+                    && (c != end && c != start)
+                {
+                    continue;
+                }
+
+                if x_blizzards[step as usize % x_blizzards.len()].contains(&c) {
+                    continue;
+                }
+
+                if y_blizzards[step as usize % y_blizzards.len()].contains(&c) {
+                    continue;
+                }
+
+                candidates.push((State { pos: c, step }, 1));
+            }
+
+            candidates.into_iter()
+        },
+        |s| (s.pos.x - start.x).abs() + (s.pos.y - start.y).abs(),
+        |s| s.pos == start,
+    )
+    .unwrap()
+    .0
+    .len() as i32
+        - 1;
+
+    let steps_final = astar(
+        &State {
+            pos: start,
+            step: steps_there + steps_back,
+        },
+        |s| {
+            let mut candidates = Vec::new();
+
+            let step = s.step + 1;
+
+            for c in [
+                s.pos + ivec2(1, 0),
+                s.pos + ivec2(-1, 0),
+                s.pos + ivec2(0, 1),
+                s.pos + ivec2(0, -1),
+                s.pos,
+            ] {
+                if (c.x >= bb.max_x || c.x <= bb.min_x || c.y >= bb.max_y || c.y <= bb.min_y)
+                    && (c != end && c != start)
+                {
+                    continue;
+                }
+
+                if x_blizzards[step as usize % x_blizzards.len()].contains(&c) {
+                    continue;
+                }
+
+                if y_blizzards[step as usize % y_blizzards.len()].contains(&c) {
+                    continue;
+                }
+
+                candidates.push((State { pos: c, step }, 1));
+            }
+
+            candidates.into_iter()
+        },
+        |s| (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs(),
+        |s| s.pos == end,
+    )
+    .unwrap()
+    .0
+    .len() as i32
+        - 1;
+
+    steps_there + steps_back + steps_final
 }
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT), 0);
-    assert_eq!(b(INPUT), 0);
+    assert_eq!(b(TEST_INPUT), 54);
+    assert_eq!(b(INPUT), 861);
 }
