@@ -29,7 +29,6 @@ struct Snafu {
 
 impl Snafu {
     fn from_i64(mut v: i64) -> Self {
-        println!("==== {v}");
         let mut digits = Vec::new();
 
         let mut largest_digit = 0;
@@ -52,8 +51,6 @@ impl Snafu {
                 } else {
                     (v.abs() >= one) as i64
                 };
-
-            println!("{v} {} {} => {}", two, one, n);
 
             v -= n * 5i64.pow(digit as u32);
 
@@ -121,7 +118,6 @@ pub fn a(input: &str) -> String {
     for number in &numbers {
         let n = number.as_i64();
         let s = Snafu::from_i64(n);
-        println!("{} => {}", s.as_i64(), s.to_string());
         assert_eq!(number.to_string(), s.to_string());
     }
 
