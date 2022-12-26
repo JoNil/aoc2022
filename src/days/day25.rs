@@ -22,13 +22,18 @@ struct Snafo {
 impl Snafo {
     fn as_i32(&self) -> i32 {
         let mut res = 0;
-        let mut factor = 0;
 
         for (position, digit) in self.digits.iter().rev().enumerate() {
             res += 5i32.pow(position as u32) * *digit;
         }
 
         res
+    }
+}
+
+impl ToString for Snafo {
+    fn to_string(&self) -> String {
+        String::new()
     }
 }
 
@@ -49,7 +54,7 @@ pub fn a(input: &str) -> String {
         .collect::<Vec<_>>();
 
     for number in &numbers {
-        println!("{:?} => {}", number, number.as_i32());
+        println!("{} => {}", number.to_string(), number.as_i32());
     }
 
     let sum = numbers.iter().map(|s| s.as_i32()).sum::<i32>();
