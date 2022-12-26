@@ -194,6 +194,7 @@ pub fn a(input: &str) -> i32 {
                 s.pos + ivec2(-1, 0),
                 s.pos + ivec2(0, 1),
                 s.pos + ivec2(0, -1),
+                s.pos,
             ] {
                 if (c.x >= bb.max_x || c.x <= bb.min_x || c.y >= bb.max_y || c.y <= bb.min_y)
                     && c != end
