@@ -172,18 +172,14 @@ pub fn a(input: &str) -> i32 {
         .find(|x| !map.contains_key(&ivec2(*x, bb.max_y)))
         .unwrap();
 
-    let start = State {
-        pos: ivec2(start_x, bb.min_y),
-        step: 0,
-    };
-
+    let start = ivec2(start_x, bb.min_y);
     let end = ivec2(end_x, bb.max_y);
 
-    let mut min_distance = i32::MAX;
-    let mut max_step = i32::MIN;
-
     let res = dijkstra(
-        &start,
+        &State {
+            pos: start,
+            step: 0,
+        },
         |s| {
             let mut candidates = Vec::new();
 
@@ -197,7 +193,7 @@ pub fn a(input: &str) -> i32 {
                 s.pos,
             ] {
                 if (c.x >= bb.max_x || c.x <= bb.min_x || c.y >= bb.max_y || c.y <= bb.min_y)
-                    && c != end
+                    && (c != end && c != start)
                 {
                     continue;
                 }
@@ -208,14 +204,6 @@ pub fn a(input: &str) -> i32 {
 
                 if y_blizzards[step as usize % y_blizzards.len()].contains(&c) {
                     continue;
-                }
-
-                let distance = (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs();
-
-                if distance < min_distance || step > max_step {
-                    println!("Dist: {distance}, Step: {step}, Pos: {c}");
-                    min_distance = min_distance.min(distance);
-                    max_step = max_step.max(step);
                 }
 
                 candidates.push((State { pos: c, step }, 1));
@@ -234,9 +222,7 @@ pub fn a(input: &str) -> i32 {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 18);
-    //panic!("Te");
-    // Not 153
-    //assert_eq!(a(INPUT), 0);
+    assert_eq!(a(INPUT), 288);
 }
 
 pub fn b(input: &str) -> i32 {
