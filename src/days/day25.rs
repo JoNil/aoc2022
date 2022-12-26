@@ -20,6 +20,10 @@ struct Snafo {
 }
 
 impl Snafo {
+    fn from_i32(v: i32) -> Self {
+        Snafo { digits: Vec::new() }
+    }
+
     fn as_i32(&self) -> i32 {
         let mut res = 0;
 
@@ -33,7 +37,18 @@ impl Snafo {
 
 impl ToString for Snafo {
     fn to_string(&self) -> String {
-        String::new()
+        let mut res = String::new();
+        for n in &self.digits {
+            res.push(match n {
+                2 => '2',
+                1 => '1',
+                0 => '0',
+                -1 => '-',
+                -2 => '=',
+                _ => panic!("Bad num"),
+            });
+        }
+        res
     }
 }
 
@@ -59,9 +74,7 @@ pub fn a(input: &str) -> String {
 
     let sum = numbers.iter().map(|s| s.as_i32()).sum::<i32>();
 
-    println!("{sum}");
-
-    String::new()
+    Snafo::from_i32(sum).to_string()
 }
 
 #[test]
