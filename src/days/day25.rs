@@ -18,7 +18,7 @@ fn divisor_for_digit(digit: i32) -> i32 {
     5i32.pow(digit as u32) - (0..digit).map(|f| 2 * 5i32.pow(f as u32)).sum::<i32>()
 }
 
-fn max_negative(digit: i32) -> i32 {
+fn max_all_digits(digit: i32) -> i32 {
     (0..digit).map(|f| 2 * 5i32.pow(f as u32)).sum::<i32>()
 }
 
@@ -43,20 +43,18 @@ impl Snafu {
         }
 
         for digit in (0..=largest_digit).rev() {
-            let divisor = if v.abs() > 5i32.pow(digit as u32) {
-                5i32.pow(digit as u32)
-            } else {
-                divisor_for_digit(digit)
-            };
+            let two = 2 * 5i32.pow(digit as u32) - max_all_digits(digit);
+            let one = 5i32.pow(digit as u32) - max_all_digits(digit);
 
-            let n = v / divisor;
-            println!(
-                "{v} {} {} ({}) => {}",
-                divisor_for_digit(digit),
-                5i32.pow(digit as u32),
-                divisor,
-                n
-            );
+            let n = v.signum()
+                * if v.abs() >= two {
+                    2
+                } else {
+                    (v.abs() >= one) as i32
+                };
+
+            println!("{v} {} {} => {}", two, one, n);
+
             v -= n * 5i32.pow(digit as u32);
 
             digits.push(n);
@@ -135,7 +133,7 @@ pub fn a(input: &str) -> String {
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), "2=-1=0".to_string());
-    assert_eq!(a(INPUT), String::new());
+    //assert_eq!(a(INPUT), String::new());
 }
 
 pub fn b(input: &str) -> String {
