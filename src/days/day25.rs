@@ -14,14 +14,46 @@ fn char_to_snafo(c: char) -> i32 {
     }
 }
 
+fn divisor_for_digit(digit: i32) -> i32 {
+    5i32.pow(digit as u32) - (0..digit).map(|f| 2 * 5i32.pow(f as u32)).sum::<i32>()
+}
+
+fn max_negative(digit: i32) -> i32 {
+    (0..digit).map(|f| 2 * 5i32.pow(f as u32)).sum::<i32>()
+}
+
 #[derive(Debug)]
-struct Snafo {
+struct Snafu {
     digits: Vec<i32>,
 }
 
-impl Snafo {
-    fn from_i32(v: i32) -> Self {
-        Snafo { digits: Vec::new() }
+impl Snafu {
+    fn from_i32(mut v: i32) -> Self {
+        let mut digits = Vec::new();
+
+        let mut largest_digit = 0;
+
+        for digit in 0.. {
+            if v / divisor_for_digit(digit) == 0 {
+                break;
+            }
+
+            largest_digit = digit;
+        }
+
+        for digit in (0..=largest_digit).rev() {
+            let divisor = divisor_for_digit(digit);
+            let max_negative = max_negative(digit);
+
+            let sign = v.signum();
+            let n = ((v.abs()) / divisor).clamp(-2, 2);
+            println!("{v} {} {}", sign * n, v.abs() as f32 / divisor as f32);
+            v -= sign * n * 5i32.pow(digit as u32);
+
+            digits.push(n);
+        }
+
+        Snafu { digits }
     }
 
     fn as_i32(&self) -> i32 {
@@ -35,7 +67,16 @@ impl Snafo {
     }
 }
 
-impl ToString for Snafo {
+#[test]
+fn test_from_i32() {
+    assert_eq!("=-0-2".parse::<Snafu>().unwrap().as_i32(), -1378);
+    assert_eq!("-0-2".parse::<Snafu>().unwrap().as_i32(), -128);
+    assert_eq!(Snafu::from_i32(-3).to_string(), "-2".to_string());
+    assert_eq!(Snafu::from_i32(-128).to_string(), "-0-2".to_string());
+    assert_eq!(Snafu::from_i32(1747).to_string(), "1=-0-2".to_string());
+}
+
+impl ToString for Snafu {
     fn to_string(&self) -> String {
         let mut res = String::new();
         for n in &self.digits {
@@ -52,11 +93,11 @@ impl ToString for Snafo {
     }
 }
 
-impl FromStr for Snafo {
+impl FromStr for Snafu {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Snafo {
+        Ok(Snafu {
             digits: s.chars().map(char_to_snafo).collect::<Vec<_>>(),
         })
     }
@@ -65,7 +106,7 @@ impl FromStr for Snafo {
 pub fn a(input: &str) -> String {
     let numbers = input
         .lines()
-        .map(|line| line.parse::<Snafo>().unwrap())
+        .map(|line| line.parse::<Snafu>().unwrap())
         .collect::<Vec<_>>();
 
     for number in &numbers {
@@ -74,7 +115,7 @@ pub fn a(input: &str) -> String {
 
     let sum = numbers.iter().map(|s| s.as_i32()).sum::<i32>();
 
-    Snafo::from_i32(sum).to_string()
+    Snafu::from_i32(sum).to_string()
 }
 
 #[test]
