@@ -1,5 +1,5 @@
 use glam::{ivec2, IVec2};
-use pathfinding::prelude::dijkstra;
+use pathfinding::prelude::astar;
 use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
@@ -179,7 +179,7 @@ pub fn a(input: &str) -> i32 {
 
     let end = ivec2(end_x, bb.max_y);
 
-    let res = dijkstra(
+    let res = astar(
         &start,
         |s| {
             let candidates = [
@@ -208,6 +208,7 @@ pub fn a(input: &str) -> i32 {
                 Some((State { pos: c, step }, 1))
             })
         },
+        |s| (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs(),
         |s| s.pos == end,
     )
     .unwrap();
@@ -222,7 +223,7 @@ fn test_a() {
     assert_eq!(a(TEST_INPUT), 18);
     //panic!("Te");
     // Not 153
-    //assert_eq!(a(INPUT), 0);
+    assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
