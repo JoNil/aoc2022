@@ -3,7 +3,7 @@ use std::str::FromStr;
 pub static INPUT: &str = include_str!("../input/25.txt");
 pub static TEST_INPUT: &str = include_str!("../input/25_test.txt");
 
-fn char_to_snafo(c: char) -> i32 {
+fn char_to_snafo(c: char) -> i64 {
     match c {
         '2' => 2,
         '1' => 1,
@@ -14,21 +14,21 @@ fn char_to_snafo(c: char) -> i32 {
     }
 }
 
-fn divisor_for_digit(digit: i32) -> i32 {
-    5i32.pow(digit as u32) - (0..digit).map(|f| 2 * 5i32.pow(f as u32)).sum::<i32>()
+fn divisor_for_digit(digit: i64) -> i64 {
+    5i64.pow(digit as u32) - (0..digit).map(|f| 2 * 5i64.pow(f as u32)).sum::<i64>()
 }
 
-fn max_all_digits(digit: i32) -> i32 {
-    (0..digit).map(|f| 2 * 5i32.pow(f as u32)).sum::<i32>()
+fn max_all_digits(digit: i64) -> i64 {
+    (0..digit).map(|f| 2 * 5i64.pow(f as u32)).sum::<i64>()
 }
 
 #[derive(Debug)]
 struct Snafu {
-    digits: Vec<i32>,
+    digits: Vec<i64>,
 }
 
 impl Snafu {
-    fn from_i32(mut v: i32) -> Self {
+    fn from_i64(mut v: i64) -> Self {
         println!("==== {v}");
         let mut digits = Vec::new();
 
@@ -43,19 +43,19 @@ impl Snafu {
         }
 
         for digit in (0..=largest_digit).rev() {
-            let two = 2 * 5i32.pow(digit as u32) - max_all_digits(digit);
-            let one = 5i32.pow(digit as u32) - max_all_digits(digit);
+            let two = 2 * 5i64.pow(digit as u32) - max_all_digits(digit);
+            let one = 5i64.pow(digit as u32) - max_all_digits(digit);
 
             let n = v.signum()
                 * if v.abs() >= two {
                     2
                 } else {
-                    (v.abs() >= one) as i32
+                    (v.abs() >= one) as i64
                 };
 
             println!("{v} {} {} => {}", two, one, n);
 
-            v -= n * 5i32.pow(digit as u32);
+            v -= n * 5i64.pow(digit as u32);
 
             digits.push(n);
         }
@@ -63,11 +63,11 @@ impl Snafu {
         Snafu { digits }
     }
 
-    fn as_i32(&self) -> i32 {
+    fn as_i64(&self) -> i64 {
         let mut res = 0;
 
         for (position, digit) in self.digits.iter().rev().enumerate() {
-            res += 5i32.pow(position as u32) * *digit;
+            res += 5i64.pow(position as u32) * *digit;
         }
 
         res
@@ -75,14 +75,14 @@ impl Snafu {
 }
 
 #[test]
-fn test_from_i32() {
-    assert_eq!("=-0-2".parse::<Snafu>().unwrap().as_i32(), -1378);
-    assert_eq!("-0-2".parse::<Snafu>().unwrap().as_i32(), -128);
-    assert_eq!(Snafu::from_i32(-3).to_string(), "-2".to_string());
-    assert_eq!(Snafu::from_i32(-128).to_string(), "-0-2".to_string());
-    assert_eq!(Snafu::from_i32(1747).to_string(), "1=-0-2".to_string());
-    assert_eq!(Snafu::from_i32(906).to_string(), "12111".to_string());
-    assert_eq!(Snafu::from_i32(198).to_string(), "2=0=".to_string());
+fn test_from_i64() {
+    assert_eq!("=-0-2".parse::<Snafu>().unwrap().as_i64(), -1378);
+    assert_eq!("-0-2".parse::<Snafu>().unwrap().as_i64(), -128);
+    assert_eq!(Snafu::from_i64(-3).to_string(), "-2".to_string());
+    assert_eq!(Snafu::from_i64(-128).to_string(), "-0-2".to_string());
+    assert_eq!(Snafu::from_i64(1747).to_string(), "1=-0-2".to_string());
+    assert_eq!(Snafu::from_i64(906).to_string(), "12111".to_string());
+    assert_eq!(Snafu::from_i64(198).to_string(), "2=0=".to_string());
 }
 
 impl ToString for Snafu {
@@ -119,21 +119,21 @@ pub fn a(input: &str) -> String {
         .collect::<Vec<_>>();
 
     for number in &numbers {
-        let n = number.as_i32();
-        let s = Snafu::from_i32(n);
-        println!("{} => {}", s.as_i32(), s.to_string());
+        let n = number.as_i64();
+        let s = Snafu::from_i64(n);
+        println!("{} => {}", s.as_i64(), s.to_string());
         assert_eq!(number.to_string(), s.to_string());
     }
 
-    let sum = numbers.iter().map(|s| s.as_i32()).sum::<i32>();
+    let sum = numbers.iter().map(|s| s.as_i64()).sum::<i64>();
 
-    Snafu::from_i32(sum).to_string()
+    Snafu::from_i64(sum).to_string()
 }
 
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), "2=-1=0".to_string());
-    //assert_eq!(a(INPUT), String::new());
+    assert_eq!(a(INPUT), "2=-0=01----22-0-1-10".to_string());
 }
 
 pub fn b(input: &str) -> String {
