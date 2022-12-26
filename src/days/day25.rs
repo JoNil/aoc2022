@@ -29,7 +29,7 @@ struct Snafu {
 
 impl Snafu {
     fn from_i32(mut v: i32) -> Self {
-        println!("====");
+        println!("==== {v}");
         let mut digits = Vec::new();
 
         let mut largest_digit = 0;
@@ -83,6 +83,8 @@ fn test_from_i32() {
     assert_eq!(Snafu::from_i32(-3).to_string(), "-2".to_string());
     assert_eq!(Snafu::from_i32(-128).to_string(), "-0-2".to_string());
     assert_eq!(Snafu::from_i32(1747).to_string(), "1=-0-2".to_string());
+    assert_eq!(Snafu::from_i32(906).to_string(), "12111".to_string());
+    assert_eq!(Snafu::from_i32(198).to_string(), "2=0=".to_string());
 }
 
 impl ToString for Snafu {
@@ -121,6 +123,7 @@ pub fn a(input: &str) -> String {
     for number in &numbers {
         let n = number.as_i32();
         let s = Snafu::from_i32(n);
+        println!("{} => {}", s.as_i32(), s.to_string());
         assert_eq!(number.to_string(), s.to_string());
     }
 
