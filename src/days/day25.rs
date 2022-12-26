@@ -29,6 +29,7 @@ struct Snafu {
 
 impl Snafu {
     fn from_i32(mut v: i32) -> Self {
+        println!("====");
         let mut digits = Vec::new();
 
         let mut largest_digit = 0;
@@ -42,13 +43,21 @@ impl Snafu {
         }
 
         for digit in (0..=largest_digit).rev() {
-            let divisor = divisor_for_digit(digit);
-            let max_negative = max_negative(digit);
+            let divisor = if v.abs() <= divisor_for_digit(digit) {
+                divisor_for_digit(digit)
+            } else {
+                5i32.pow(digit as u32)
+            };
 
-            let sign = v.signum();
-            let n = ((v.abs()) / divisor).clamp(-2, 2);
-            println!("{v} {} {}", sign * n, v.abs() as f32 / divisor as f32);
-            v -= sign * n * 5i32.pow(digit as u32);
+            let n = v / divisor;
+            println!(
+                "{v} {} {} ({}) => {}",
+                divisor_for_digit(digit),
+                5i32.pow(digit as u32),
+                divisor,
+                n
+            );
+            v -= n * 5i32.pow(digit as u32);
 
             digits.push(n);
         }
