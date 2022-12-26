@@ -1,6 +1,9 @@
 use glam::{ivec2, IVec2};
 use pathfinding::prelude::dijkstra;
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+};
 
 pub static INPUT: &str = include_str!("../input/24.txt");
 pub static TEST_INPUT: &str = include_str!("../input/24_test.txt");
@@ -12,7 +15,7 @@ struct BoundingBox {
     max_y: i32,
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct Blizzard {
     pos: IVec2,
     dir: IVec2,
@@ -105,12 +108,62 @@ fn parse_map(input: &str) -> (HashMap<IVec2, char>, Vec<Blizzard>, BoundingBox) 
 #[derive(Clone, Eq, PartialEq, Hash)]
 struct State {
     pos: IVec2,
-    blizzards: Vec<Blizzard>,
+    step: i32,
+}
+
+impl Debug for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("State").field("pos", &self.pos).finish()
+    }
 }
 
 pub fn a(input: &str) -> i32 {
     let (map, blizzards, bb) = parse_map(input);
     let map = &map;
+
+    let x_len = bb.max_x - bb.min_x - 1;
+    let y_len = bb.max_y - bb.min_y - 1;
+
+    let (x_blizzards, y_blizzards) = {
+        let mut x_blizzards = Vec::new();
+        let mut y_blizzards = Vec::new();
+
+        {
+            let mut state = blizzards
+                .iter()
+                .copied()
+                .filter(|b| b.dir.y == 0)
+                .collect::<Vec<_>>();
+
+            let initial_state = state.clone();
+
+            for _ in 0..x_len {
+                x_blizzards.push(state.iter().map(|b| b.pos).collect::<HashSet<_>>());
+                state = update_blizzards(&bb, &state);
+            }
+
+            assert_eq!(state, initial_state);
+        }
+
+        {
+            let mut state = blizzards
+                .iter()
+                .copied()
+                .filter(|b| b.dir.x == 0)
+                .collect::<Vec<_>>();
+
+            let initial_state = state.clone();
+
+            for _ in 0..y_len {
+                y_blizzards.push(state.iter().map(|b| b.pos).collect::<HashSet<_>>());
+                state = update_blizzards(&bb, &state);
+            }
+
+            assert_eq!(state, initial_state);
+        }
+
+        (x_blizzards, y_blizzards)
+    };
 
     let start_x = (bb.min_x..=bb.max_x)
         .find(|x| !map.contains_key(&ivec2(*x, bb.min_y)))
@@ -121,57 +174,55 @@ pub fn a(input: &str) -> i32 {
 
     let start = State {
         pos: ivec2(start_x, bb.min_y),
-        blizzards,
+        step: 0,
     };
 
     let end = ivec2(end_x, bb.max_y);
 
-    dijkstra(
+    let res = dijkstra(
         &start,
         |s| {
-            let next_blizzards = update_blizzards(&bb, &s.blizzards);
-
             let candidates = [
-                s.pos + ivec2(1, 0),
-                s.pos + ivec2(-1, 0),
-                s.pos + ivec2(0, 1),
-                s.pos + ivec2(0, -1),
-                s.pos,
+                (s.pos + ivec2(1, 0), s.step + 1),
+                (s.pos + ivec2(-1, 0), s.step + 1),
+                (s.pos + ivec2(0, 1), s.step + 1),
+                (s.pos + ivec2(0, -1), s.step + 1),
+                (s.pos, s.step + 1),
             ];
 
-            candidates.into_iter().filter_map(move |c| {
-                if map.contains_key(&c) {
+            candidates.into_iter().filter_map(|(c, step)| {
+                if (c.x == bb.max_x || c.x == bb.min_x || c.y == bb.max_y || c.y == bb.min_y)
+                    && c != end
+                {
                     return None;
                 }
 
-                for blizzard in &next_blizzards {
-                    if c == blizzard.pos {
-                        return None;
-                    }
+                if x_blizzards[step as usize % x_blizzards.len()].contains(&c) {
+                    return None;
                 }
 
-                Some((
-                    State {
-                        pos: c,
-                        blizzards: next_blizzards.clone(),
-                    },
-                    1,
-                ))
+                if y_blizzards[step as usize % y_blizzards.len()].contains(&c) {
+                    return None;
+                }
+
+                Some((State { pos: c, step }, 1))
             })
         },
         |s| s.pos == end,
     )
-    .unwrap()
-    .0
-    .len() as i32
-        - 1
+    .unwrap();
+
+    //println!("{:#?}", res.0);
+
+    res.0.len() as i32 - 1
 }
 
 #[test]
 fn test_a() {
     assert_eq!(a(TEST_INPUT), 18);
+    //panic!("Te");
     // Not 153
-    assert_eq!(a(INPUT), 0);
+    //assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
