@@ -43,10 +43,10 @@ impl Snafu {
         }
 
         for digit in (0..=largest_digit).rev() {
-            let divisor = if v.abs() <= divisor_for_digit(digit) {
-                divisor_for_digit(digit)
-            } else {
+            let divisor = if v.abs() > 5i32.pow(digit as u32) {
                 5i32.pow(digit as u32)
+            } else {
+                divisor_for_digit(digit)
             };
 
             let n = v / divisor;
@@ -119,7 +119,9 @@ pub fn a(input: &str) -> String {
         .collect::<Vec<_>>();
 
     for number in &numbers {
-        println!("{} => {}", number.to_string(), number.as_i32());
+        let n = number.as_i32();
+        let s = Snafu::from_i32(n);
+        assert_eq!(number.to_string(), s.to_string());
     }
 
     let sum = numbers.iter().map(|s| s.as_i32()).sum::<i32>();
