@@ -1,5 +1,5 @@
 use glam::{ivec2, IVec2};
-use pathfinding::prelude::astar;
+use pathfinding::prelude::dijkstra;
 use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
@@ -179,41 +179,53 @@ pub fn a(input: &str) -> i32 {
 
     let end = ivec2(end_x, bb.max_y);
 
-    let res = astar(
+    let mut min_distance = i32::MAX;
+    let mut max_step = i32::MIN;
+
+    let res = dijkstra(
         &start,
         |s| {
-            let candidates = [
-                (s.pos + ivec2(1, 0), s.step + 1),
-                (s.pos + ivec2(-1, 0), s.step + 1),
-                (s.pos + ivec2(0, 1), s.step + 1),
-                (s.pos + ivec2(0, -1), s.step + 1),
-                (s.pos, s.step + 1),
-            ];
+            let mut candidates = Vec::new();
 
-            candidates.into_iter().filter_map(|(c, step)| {
-                if (c.x == bb.max_x || c.x == bb.min_x || c.y == bb.max_y || c.y == bb.min_y)
+            let step = s.step + 1;
+
+            for c in [
+                s.pos + ivec2(1, 0),
+                s.pos + ivec2(-1, 0),
+                s.pos + ivec2(0, 1),
+                s.pos + ivec2(0, -1),
+            ] {
+                if (c.x >= bb.max_x || c.x <= bb.min_x || c.y >= bb.max_y || c.y <= bb.min_y)
                     && c != end
                 {
-                    return None;
+                    continue;
                 }
 
                 if x_blizzards[step as usize % x_blizzards.len()].contains(&c) {
-                    return None;
+                    continue;
                 }
 
                 if y_blizzards[step as usize % y_blizzards.len()].contains(&c) {
-                    return None;
+                    continue;
                 }
 
-                Some((State { pos: c, step }, 1))
-            })
+                let distance = (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs();
+
+                if distance < min_distance || step > max_step {
+                    println!("Dist: {distance}, Step: {step}, Pos: {c}");
+                    min_distance = min_distance.min(distance);
+                    max_step = max_step.max(step);
+                }
+
+                candidates.push((State { pos: c, step }, 1));
+            }
+
+            candidates.into_iter()
         },
-        |s| (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs(),
+        //|s| (s.pos.x - end.x).abs() + (s.pos.y - end.y).abs(),
         |s| s.pos == end,
     )
     .unwrap();
-
-    //println!("{:#?}", res.0);
 
     res.0.len() as i32 - 1
 }
@@ -223,7 +235,7 @@ fn test_a() {
     assert_eq!(a(TEST_INPUT), 18);
     //panic!("Te");
     // Not 153
-    assert_eq!(a(INPUT), 0);
+    //assert_eq!(a(INPUT), 0);
 }
 
 pub fn b(input: &str) -> i32 {
