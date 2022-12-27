@@ -3,8 +3,6 @@
 use glam::{ivec2, IVec2};
 use std::collections::HashMap;
 
-use crate::utils::map::print_map;
-
 pub static INPUT: &str = include_str!("../input/22.txt");
 pub static TEST_INPUT: &str = include_str!("../input/22_test.txt");
 pub static TORKEL_INPUT: &str = include_str!("../input/22_torkel.txt");
@@ -297,8 +295,6 @@ pub fn b(
         .min()
         .unwrap();
 
-    let mut debug_map = map.clone();
-
     let last = side_len - 1;
 
     let mut pos = ivec2(x_start, 1);
@@ -337,22 +333,6 @@ pub fn b(
                         }
                         _ => (),
                     }
-
-                    println!("{pos:?}");
-                    match dir {
-                        Dir::R => {
-                            debug_map.insert(pos, '>');
-                        }
-                        Dir::L => {
-                            debug_map.insert(pos, '<');
-                        }
-                        Dir::U => {
-                            debug_map.insert(pos, '^');
-                        }
-                        Dir::D => {
-                            debug_map.insert(pos, 'v');
-                        }
-                    }
                 }
             }
             Instruction::Cw => {
@@ -363,8 +343,6 @@ pub fn b(
             }
         }
     }
-
-    print_map(&debug_map);
 
     1000 * pos.y + 4 * pos.x + dir.score()
 }
@@ -440,7 +418,7 @@ fn test_b() {
         .into_iter()
         .collect::<HashMap<_, _>>();
 
-        assert_eq!(b(INPUT, &sides, side_len, &connections), 0);
+        assert_eq!(b(INPUT, &sides, side_len, &connections), 15426);
     }
 }
 
