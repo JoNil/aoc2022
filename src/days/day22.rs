@@ -261,6 +261,14 @@ fn find_side(sides: &HashMap<i32, IVec2>, side: i32, pos: IVec2) -> i32 {
         .0
 }
 
+enum Transform {
+    Cw,
+    Ccw,
+    OneEighty,
+    Identity,
+    Negate,
+}
+
 pub fn b(input: &str, side: i32) -> i32 {
     let (map_input, instructions_input) = input.split_once("\n\n").unwrap();
     let (map, _, _) = parse_map(map_input);
@@ -282,6 +290,16 @@ pub fn b(input: &str, side: i32) -> i32 {
     ]
     .into_iter()
     .collect::<HashMap<i32, IVec2>>();
+
+    let conenctions = vec![(
+        1,
+        [
+            (Dir::U, 2, Transform::OneEighty),
+            (Dir::R, 6, Transform::OneEighty),
+            (Dir::D, 4, Transform::Identity),
+            (Dir::L, 3, Transform::Ccw),
+        ],
+    )];
 
     let mut debug_map = map.clone();
 
