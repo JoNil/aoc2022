@@ -109,8 +109,8 @@ fn parse_instructions(input: &str) -> Vec<Instruction> {
     res
 }
 
-#[derive(Copy, Clone)]
-enum Dir {
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
+pub enum Dir {
     R,
     L,
     U,
@@ -253,23 +253,40 @@ fn test_a() {
     assert_eq!(a(INPUT), 27436);
 }
 
-fn find_side(sides: &HashMap<i32, IVec2>, side: i32, pos: IVec2) -> i32 {
+fn find_side(sides: &HashMap<i32, IVec2>, side_len: i32, pos: IVec2) -> i32 {
     *sides
         .iter()
-        .find(|s| pos.x >= s.1.x && pos.x < s.1.x + side && pos.y >= s.1.y && pos.y < s.1.y + side)
+        .find(|s| {
+            pos.x >= s.1.x && pos.x < s.1.x + side_len && pos.y >= s.1.y && pos.y < s.1.y + side_len
+        })
         .unwrap()
         .0
 }
 
-enum Transform {
-    Cw,
-    Ccw,
-    OneEighty,
-    Identity,
-    Negate,
+fn get_local_pos(pos: IVec2, dir: Dir, side: IVec2) -> i32 {
+    match dir {
+        Dir::R | Dir::L => pos.y - side.y,
+        Dir::U | Dir::D => pos.x - side.x,
+    }
 }
 
-pub fn b(input: &str, side: i32) -> i32 {
+fn wrap(side_pos: IVec2, last: i32, dir: Dir, local_pos: i32, flip: bool) -> IVec2 {
+    let transformed_local = if flip { last - local_pos } else { local_pos };
+
+    match dir {
+        Dir::R => ivec2(side_pos.x, side_pos.y + transformed_local),
+        Dir::L => ivec2(side_pos.x + last, side_pos.y + transformed_local),
+        Dir::U => ivec2(side_pos.x + transformed_local, side_pos.y + last),
+        Dir::D => ivec2(side_pos.x + transformed_local, side_pos.y),
+    }
+}
+
+pub fn b(
+    input: &str,
+    sides: &HashMap<i32, IVec2>,
+    side_len: i32,
+    connections: &HashMap<(i32, Dir), (i32, Dir, bool)>,
+) -> i32 {
     let (map_input, instructions_input) = input.split_once("\n\n").unwrap();
     let (map, _, _) = parse_map(map_input);
     let instructions = parse_instructions(instructions_input.trim());
@@ -280,30 +297,9 @@ pub fn b(input: &str, side: i32) -> i32 {
         .min()
         .unwrap();
 
-    let sides = [
-        (1, ivec2(2 * side + 1, 1)),
-        (2, ivec2(1, side + 1)),
-        (3, ivec2(side + 1, side + 1)),
-        (4, ivec2(2 * side + 1, side + 1)),
-        (5, ivec2(2 * side + 1, 2 * side + 1)),
-        (6, ivec2(3 * side + 1, 2 * side + 1)),
-    ]
-    .into_iter()
-    .collect::<HashMap<i32, IVec2>>();
-
-    let conenctions = vec![(
-        1,
-        [
-            (Dir::U, 2, Transform::OneEighty),
-            (Dir::R, 6, Transform::OneEighty),
-            (Dir::D, 4, Transform::Identity),
-            (Dir::L, 3, Transform::Ccw),
-        ],
-    )];
-
     let mut debug_map = map.clone();
 
-    let last = side - 1;
+    let last = side_len - 1;
 
     let mut pos = ivec2(x_start, 1);
     let mut dir = Dir::R;
@@ -320,107 +316,21 @@ pub fn b(input: &str, side: i32) -> i32 {
                         }
                         '#' => break,
                         ' ' => {
-                            let s = find_side(&sides, side, pos);
+                            let current_side = find_side(sides, side_len, pos);
+                            let (dest_side, wrapped_dir, flip) =
+                                connections.get(&(current_side, dir)).unwrap();
 
-                            let (wrapped_pos, wrapped_dir) = match (dir, s) {
-                                // Right
-                                (Dir::R, 1) => {
-                                    let y_on_side = pos.y - sides.get(&1).unwrap().y;
-                                    let side_6 = sides.get(&6).unwrap();
+                            let current_side = sides.get(&current_side).unwrap();
+                            let dest_side = sides.get(dest_side).unwrap();
 
-                                    (ivec2(side_6.x + last, side_6.y + last - y_on_side), Dir::L)
-                                }
-                                (Dir::R, 4) => {
-                                    let y_on_side = pos.y - sides.get(&4).unwrap().y;
-                                    let side_6 = sides.get(&6).unwrap();
+                            let local_pos = get_local_pos(pos, dir, *current_side);
 
-                                    (ivec2(side_6.x + last - y_on_side, side_6.y), Dir::D)
-                                }
-                                (Dir::R, 6) => {
-                                    let y_on_side = pos.y - sides.get(&6).unwrap().y;
-                                    let side_1 = sides.get(&1).unwrap();
-
-                                    (ivec2(side_1.x + last, side_1.y + last - y_on_side), Dir::L)
-                                }
-
-                                // Up
-                                (Dir::U, 2) => {
-                                    let x_on_side = pos.x - sides.get(&2).unwrap().x;
-                                    let side_1 = sides.get(&1).unwrap();
-
-                                    (ivec2(side_1.x + last - x_on_side, side_1.y), Dir::D)
-                                }
-                                (Dir::U, 3) => {
-                                    let x_on_side = pos.x - sides.get(&3).unwrap().x;
-                                    let side_1 = sides.get(&1).unwrap();
-
-                                    (ivec2(side_1.x, side_1.y + x_on_side), Dir::R)
-                                }
-                                (Dir::U, 1) => {
-                                    let x_on_side = pos.x - sides.get(&1).unwrap().x;
-                                    let side_2 = sides.get(&2).unwrap();
-
-                                    (ivec2(side_2.x + last - x_on_side, side_2.y), Dir::D)
-                                }
-                                (Dir::U, 6) => {
-                                    let x_on_side = pos.x - sides.get(&6).unwrap().x;
-                                    let side_4 = sides.get(&4).unwrap();
-
-                                    (ivec2(side_4.x + last, side_4.y + last - x_on_side), Dir::L)
-                                }
-
-                                // Down
-                                (Dir::D, 2) => {
-                                    let x_on_side = pos.x - sides.get(&2).unwrap().x;
-                                    let side_5 = sides.get(&5).unwrap();
-
-                                    (ivec2(side_5.x + last - x_on_side, side_5.y + last), Dir::U)
-                                }
-                                (Dir::D, 3) => {
-                                    let x_on_side = pos.x - sides.get(&3).unwrap().x;
-                                    let side_5 = sides.get(&5).unwrap();
-
-                                    (ivec2(side_5.x, side_5.y + last - x_on_side), Dir::R)
-                                }
-                                (Dir::D, 5) => {
-                                    let x_on_side = pos.x - sides.get(&5).unwrap().x;
-                                    let side_2 = sides.get(&2).unwrap();
-
-                                    (ivec2(side_2.x + last - x_on_side, side_2.y + last), Dir::U)
-                                }
-                                (Dir::D, 6) => {
-                                    let x_on_side = pos.x - sides.get(&6).unwrap().x;
-                                    let side_2 = sides.get(&2).unwrap();
-
-                                    (ivec2(side_2.x, side_2.y + last - x_on_side), Dir::R)
-                                }
-
-                                // Left
-                                (Dir::L, 1) => {
-                                    let y_on_side = pos.y - sides.get(&1).unwrap().y;
-                                    let side_3 = sides.get(&3).unwrap();
-
-                                    (ivec2(side_3.x + y_on_side, side_3.y), Dir::D)
-                                }
-                                (Dir::L, 2) => {
-                                    let y_on_side = pos.y - sides.get(&2).unwrap().y;
-                                    let side_4 = sides.get(&4).unwrap();
-
-                                    (ivec2(side_4.x, side_4.y + y_on_side), Dir::L)
-                                }
-                                (Dir::L, 5) => {
-                                    let y_on_side = pos.y - sides.get(&5).unwrap().y;
-                                    let side_3 = sides.get(&3).unwrap();
-
-                                    (ivec2(side_3.x + last - y_on_side, side_3.y + last), Dir::U)
-                                }
-
-                                _ => panic!("Error"),
-                            };
+                            let wrapped_pos =
+                                wrap(*dest_side, last, *wrapped_dir, local_pos, *flip);
 
                             if *map.get(&wrapped_pos).unwrap() != '#' {
                                 pos = wrapped_pos;
-                                dir = wrapped_dir;
+                                dir = *wrapped_dir;
                             } else {
                                 break;
                             }
@@ -461,6 +371,107 @@ pub fn b(input: &str, side: i32) -> i32 {
 
 #[test]
 fn test_b() {
-    assert_eq!(b(TEST_INPUT, 4), 5031);
-    assert_eq!(b(INPUT, 50), 0);
+    {
+        let side_len = 4;
+
+        let sides = [
+            (1, ivec2(2 * side_len + 1, 1)),
+            (2, ivec2(1, side_len + 1)),
+            (3, ivec2(side_len + 1, side_len + 1)),
+            (4, ivec2(2 * side_len + 1, side_len + 1)),
+            (5, ivec2(2 * side_len + 1, 2 * side_len + 1)),
+            (6, ivec2(3 * side_len + 1, 2 * side_len + 1)),
+        ]
+        .into_iter()
+        .collect::<HashMap<i32, IVec2>>();
+
+        let connections = [
+            ((1, Dir::U), (2, Dir::D, true)),
+            ((1, Dir::R), (6, Dir::L, true)),
+            ((1, Dir::L), (3, Dir::D, false)),
+            ((2, Dir::U), (1, Dir::D, true)),
+            ((2, Dir::D), (5, Dir::U, true)),
+            ((2, Dir::L), (6, Dir::U, true)),
+            ((3, Dir::U), (1, Dir::R, false)),
+            ((3, Dir::D), (5, Dir::R, true)),
+            ((4, Dir::R), (6, Dir::D, true)),
+            ((5, Dir::D), (2, Dir::U, true)),
+            ((5, Dir::L), (3, Dir::U, true)),
+            ((6, Dir::U), (4, Dir::L, true)),
+            ((6, Dir::R), (1, Dir::L, true)),
+            ((6, Dir::D), (2, Dir::R, true)),
+        ]
+        .into_iter()
+        .collect::<HashMap<_, _>>();
+
+        assert_eq!(b(TEST_INPUT, &sides, side_len, &connections), 5031);
+    }
+
+    {
+        let side_len = 50;
+
+        let sides = [
+            (1, ivec2(side_len + 1, 1)),
+            (2, ivec2(2 * side_len + 1, 1)),
+            (3, ivec2(side_len + 1, side_len + 1)),
+            (4, ivec2(1, 2 * side_len + 1)),
+            (5, ivec2(side_len + 1, 2 * side_len + 1)),
+            (6, ivec2(1, 3 * side_len + 1)),
+        ]
+        .into_iter()
+        .collect::<HashMap<i32, IVec2>>();
+
+        let connections = [
+            ((1, Dir::U), (6, Dir::R, false)),
+            ((1, Dir::L), (4, Dir::R, true)),
+            ((2, Dir::U), (6, Dir::U, false)),
+            ((2, Dir::R), (5, Dir::L, true)),
+            ((2, Dir::D), (3, Dir::L, false)),
+            ((3, Dir::R), (2, Dir::U, false)),
+            ((3, Dir::L), (4, Dir::D, false)),
+            ((4, Dir::U), (3, Dir::R, false)),
+            ((4, Dir::L), (1, Dir::R, true)),
+            ((5, Dir::R), (2, Dir::L, true)),
+            ((5, Dir::D), (6, Dir::L, false)),
+            ((6, Dir::R), (5, Dir::U, false)),
+            ((6, Dir::L), (1, Dir::D, false)),
+            ((6, Dir::D), (2, Dir::D, false)),
+        ]
+        .into_iter()
+        .collect::<HashMap<_, _>>();
+
+        assert_eq!(b(INPUT, &sides, side_len, &connections), 0);
+    }
 }
+
+//         1111
+//         1111
+//         1111
+//         1111
+// 222233334444
+// 222233334444
+// 222233334444
+// 222233334444
+//         55556666
+//         55556666
+//         55556666
+//         55556666
+//
+//
+//
+//     11112222
+//     11112222
+//     11112222
+//     11112222
+//     3333
+//     3333
+//     3333
+//     3333
+// 44445555
+// 44445555
+// 44445555
+// 44445555
+// 6666
+// 6666
+// 6666
+// 6666
