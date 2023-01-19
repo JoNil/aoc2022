@@ -131,13 +131,3 @@ fn test_a() {
     assert_eq!(a(TEST_INPUT), "2=-1=0".to_string());
     assert_eq!(a(INPUT), "2=-0=01----22-0-1-10".to_string());
 }
-
-pub fn b(input: &str) -> String {
-    String::new()
-}
-
-#[test]
-fn test_b() {
-    assert_eq!(b(TEST_INPUT), String::new());
-    assert_eq!(b(INPUT), String::new());
-}
